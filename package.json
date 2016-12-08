@@ -1,0 +1,22 @@
+{
+  "name": "commons",
+  "version": "0.0.1",
+  "main": "index.js",
+  "dependencies": {
+    "elasticsearch": "^12.0.1",
+    "request": "^2.78.0",
+    "restify": "^4.1.1",
+    "rethinkdbdash": "^2.3.23",
+    "sorted-set": "^0.3.0",
+    "yargs": "^6.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.8.1",
+    "eslint-config-xo": "^0.17.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "lint": "eslint ."
+  },
+  "licence": "MIT"
+}
