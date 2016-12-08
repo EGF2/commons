@@ -18,5 +18,5 @@
     "start": "node index.js",
     "lint": "eslint ."
   },
-  "licence": "MIT"
+  "license": "MIT"
 }
