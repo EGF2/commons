@@ -11,6 +11,8 @@
 function newConsumer(config, eventHandler, errorHandler) {
     if (config.queue === "rethinkdb") {
         return require("./rethinkdb")(config, eventHandler, errorHandler);
+    } else if (config.queue === "kafka") {
+        return require("./kafka")(config, eventHandler, errorHandler);
     }
     throw new Error("Unknown consumer type");
 }
