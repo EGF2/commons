@@ -11,7 +11,7 @@ function newConsumer(config, eventHandler, errorHandler) {
     let consumer = new kafka.SimpleConsumer({
         connectionString: config.kafka.hosts.join(","),
         groupId: config["consumer-group"],
-        clientId: config.kafka.client_id
+        clientId: config.kafka["client-id"]
     });
     return consumer.init().then(() => {
         return consumer.fetchOffset([{
