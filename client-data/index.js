@@ -8,7 +8,7 @@ function newClient(url) {
         version: "*"
     });
 
-    let handle = (method, path, body) =>
+    let handle = (method, path, body, author) =>
         new Promise((resolve, reject) => {
             let callback = (err, req, res, obj) => {
                 if (err) {
@@ -16,14 +16,21 @@ function newClient(url) {
                 }
                 resolve(obj);
             };
+            let options = {path};
+            if (author) {
+                options.headers = {
+                    "Author": author
+                };
+            }
+
             if (method === "GET") {
-                client.get(path, callback);
+                client.get(options, callback);
             } else if (method === "POST") {
-                client.post(path, body, callback);
+                client.post(options, body, callback);
             } else if (method === "PUT") {
-                client.put(path, body, callback);
+                client.put(options, body, callback);
             } else if (method === "DELETE") {
-                client.del(path, callback);
+                client.del(options, callback);
             }
         });
 
@@ -113,17 +120,17 @@ function newClient(url) {
         /**
          * Create object
          */
-        createObject: object => handle("POST", "/v1/graph", object),
+        createObject: (object, author) => handle("POST", "/v1/graph", object, author),
 
         /**
          * Update object
          */
-        updateObject: (id, delta) => handle("PUT", `/v1/graph/${id}`, delta),
+        updateObject: (id, delta, author) => handle("PUT", `/v1/graph/${id}`, delta, author),
 
         /**
          * Delete object
          */
-        deleteObject: id => handle("DELETE", `/v1/graph/${id}`),
+        deleteObject: (id, author) => handle("DELETE", `/v1/graph/${id}`, undefined, author),
 
         /**
          * Get edge
@@ -159,12 +166,12 @@ function newClient(url) {
         /**
          * Create edge
          */
-        createEdge: (srcID, edgeName, dstID) => handle("POST", `/v1/graph/${srcID}/${edgeName}/${dstID}`, {}),
+        createEdge: (srcID, edgeName, dstID, author) => handle("POST", `/v1/graph/${srcID}/${edgeName}/${dstID}`, {}, author),
 
         /**
          * Delete edge
          */
-        deleteEdge: (srcID, edgeName, dstID) => handle("DELETE", `/v1/graph/${srcID}/${edgeName}/${dstID}`),
+        deleteEdge: (srcID, edgeName, dstID, author) => handle("DELETE", `/v1/graph/${srcID}/${edgeName}/${dstID}`, undefined, author),
 
         /**
          * Handle all pages
