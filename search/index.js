@@ -65,27 +65,19 @@ class Searcher {
             });
         }
 
-        let query = {};
+        let query = {query: {}};
 
         if (options.fields && options.q) {
-            query.query = {};
-            query.query.filtered = query.query.filtered || {};
-            query.query.filtered.query = {
-                multi_match: {
-                    query: options.q,
-                    fields: options.fields
-                }
+            query.query.multi_match = {
+                query: options.q,
+                fields: options.fields
             };
         }
 
         if (filters.length || notFilters.length) {
-            query.query = query.query || {};
-            query.query.filtered = query.query.filtered || {};
-            query.query.filtered.filter = {
-                bool: {
-                    must: filters,
-                    must_not: notFilters
-                }
+            query.query.bool = {
+                must: filters,
+                must_not: notFilters
             };
         }
 
