@@ -85,28 +85,57 @@ class Searcher {
             query.size = options.count;
         }
 
-        if (options.after) {
-            query.from = options.after;
-        }
-
         // add sorting
+        query.sort = [];
         if (options.sort) {
-            query.sort = [];
             options.sort.forEach(sort => {
                 let sortField = sort.split("(")[0];
                 query.sort.push({[sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc"});
             });
         }
+        query.sort.push({id: "asc"})
 
         return query;
     }
 
     search(options) {
-        return this.elastic.search({
-            index: options.object,
-            type: options.object,
-            body: this.createRequest(options)
-        }).then(body => ({results: body.hits.hits.map(doc => doc._id), count: body.hits.total}));
+        let query = Promise.resolve();
+        if (options.after) {
+            let request = this.createRequest(options);
+            request.query.term = {id: options.after};
+            query = this.elastic.search({
+                index: options.object,
+                type: options.object,
+                body: request
+            }).then(body => {
+                if (body.hits.hits.length) {
+                    return body.hits.hits[0].sort;
+                }
+                throw new Error("Incorrect parameter 'after'");
+            });
+        }
+
+        return query.then(searchAfter => {
+            let request = this.createRequest(options);
+            if (searchAfter) {
+                request.search_after = searchAfter;
+            }
+            return this.elastic.search({
+                index: options.object,
+                type: options.object,
+                body: request
+            });
+        }).then(body => {
+            let res = {
+                results: body.hits.hits.map(doc => doc._id),
+                count: body.hits.total
+            };
+            if (body.hits.hits.length > 0) {
+                res.first = body.hits.hits[0]._source.id;
+                res.last = body.hits.hits.slice(-1)[0]._source.id;
+            }
+            return res;
+        });
     }
 }
 
