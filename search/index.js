@@ -68,17 +68,23 @@ class Searcher {
         let query = {query: {}};
 
         if (options.fields && options.q) {
-            query.query.multi_match = {
-                query: options.q,
-                fields: options.fields
+            query.query.bool = query.query.bool || {};
+            query.query.bool.should = {
+                multi_match: {
+                    query: options.q,
+                    fields: options.fields
+                }
             };
         }
 
         if (filters.length || notFilters.length) {
-            query.query.bool = {
-                must: filters,
-                must_not: notFilters
-            };
+            query.query.bool = query.query.bool || {};
+            if (filters.length) {
+                query.query.bool.must = filters;
+            }
+            if (notFilters.length) {
+                query.query.bool.must_not = notFilters;
+            }
         }
 
         if (options.count) {
@@ -102,7 +108,12 @@ class Searcher {
         let query = Promise.resolve();
         if (options.after) {
             let request = this.createRequest(options);
-            request.query.term = {id: options.after};
+            request.query.bool = request.query.bool || {};
+            request.query.bool.filter = {
+                term: {
+                    id: options.after
+                }
+            };
             query = this.elastic.search({
                 index: options.object,
                 type: options.object,
