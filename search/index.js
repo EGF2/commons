@@ -87,6 +87,10 @@ class Searcher {
             }
         }
 
+        if (!filters.length && !options.q) {
+            query.query.match_all = {};
+        }
+
         if (options.count) {
             query.size = options.count;
         }
