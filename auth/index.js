@@ -58,6 +58,9 @@ class Client {
             }
 
             client.get(`/v1/internal/session?token=${token}`, (err, req, res, obj) => {
+                if (obj.deleted_at) {
+                    return reject(new restify.UnauthorizedError("Bearer token doesn't exist"));
+                }
                 if (err) {
                     return reject(err);
                 }
