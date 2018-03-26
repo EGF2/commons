@@ -70,8 +70,8 @@ class Searcher {
         if (options.fields && options.q) {
             query.query.bool = query.query.bool || {};
             query.query.bool.should = {
-                multi_match: {
-                    query: options.q,
+                query_string: {
+                    query: `*${options.q}*`,
                     fields: options.fields
                 }
             };
