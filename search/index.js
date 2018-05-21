@@ -69,7 +69,8 @@ class Searcher {
 
         if (options.fields && options.q) {
             query.query.bool = query.query.bool || {};
-            query.query.bool.should = {
+            options.q = options.q.replace(/[^\w\s\.]/gi, " AND ");
+            query.query.bool.must = {
                 query_string: {
                     query: `*${options.q}*`,
                     fields: options.fields
@@ -80,7 +81,7 @@ class Searcher {
         if (filters.length || notFilters.length) {
             query.query.bool = query.query.bool || {};
             if (filters.length) {
-                query.query.bool.must = filters;
+                query.query.bool.filter = filters;
             }
             if (notFilters.length) {
                 query.query.bool.must_not = notFilters;
