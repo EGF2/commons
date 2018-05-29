@@ -10,7 +10,7 @@ function newClient(url) {
 
     return {
         getImageUrl: file_id => new Promise((resolve, reject) => {
-            client.get("/v1/internal/file_url", file_id, (err, req, res, obj) => {
+            client.get(`/v1/internal/file_url?file_id=${file_id.fileId}`, (err, req, res, obj) => {
                 if (err) {
                     return reject(err);
                 }
