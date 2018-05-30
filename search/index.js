@@ -101,7 +101,7 @@ class Searcher {
             }
         }
 
-        if (!filters.length && !options.q) {
+        if (!filters.length && !notFilters.length && !options.q) {
             query.query.match_all = {};
         }
 
@@ -151,9 +151,9 @@ class Searcher {
 
         return query.then(searchAfter => {
             let request = this.createRequest(options);
-            if (searchAfter) {
-                request.search_after = searchAfter;
-            }
+            // if (searchAfter) {
+            //     request.search_after = searchAfter;
+            // }
             return this.elastic.search({
                 index: options.object,
                 type: options.object,
