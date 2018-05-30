@@ -109,6 +109,11 @@ class Searcher {
             query.size = options.count;
         }
 
+        // Add parameter "from" instead of "search_after"
+        if (options.after) {
+            query.from = options.after;
+        }
+
         // add sorting
         query.sort = [];
         if (options.sort) {
@@ -126,12 +131,12 @@ class Searcher {
         let query = Promise.resolve();
         if (options.after) {
             let request = this.createRequest(options);
-            request.query.bool = request.query.bool || {};
-            request.query.bool.filter = {
-                term: {
-                    id: options.after
-                }
-            };
+            // request.query.bool = request.query.bool || {};
+            // request.query.bool.filter = {
+            //     term: {
+            //         id: options.after
+            //     }
+            // };
             query = this.elastic.search({
                 index: options.object,
                 type: options.object,
