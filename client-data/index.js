@@ -29,6 +29,8 @@ function newClient(url) {
                 client.post(options, body, callback);
             } else if (method === "PUT") {
                 client.put(options, body, callback);
+            } else if (method === "PATCH") {
+                client.patch(options, body, callback);
             } else if (method === "DELETE") {
                 client.del(options, callback);
             }
@@ -125,7 +127,12 @@ function newClient(url) {
         /**
          * Update object
          */
-        updateObject: (id, delta, author) => handle("PUT", `/v1/graph/${id}`, delta, author),
+        updateObject: (id, delta, author) => handle("PATCH", `/v1/graph/${id}`, delta, author),
+
+        /**
+         * Replace object
+         */
+        replaceObject: (id, object, author) => handle("PUT", `/v1/graph/${id}`, object, author),
 
         /**
          * Delete object
