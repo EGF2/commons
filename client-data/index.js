@@ -174,6 +174,11 @@ function newClient(url) {
         deleteEdge: (srcID, edgeName, dstID, author) => handle("DELETE", `/v1/graph/${srcID}/${edgeName}/${dstID}`, undefined, author),
 
         /**
+         * Create audit
+         */
+        createAudit: (auditLog, author) => handle("POST", "/v1/audit", auditLog, author),
+
+        /**
          * Handle all pages
          * @param {function(last) Promise<page>} query - execute query to server
          * @param {function(page) Promise} handler - handle each page
