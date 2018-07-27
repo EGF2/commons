@@ -48,7 +48,7 @@ class Searcher {
                 } else {
                     notEqVals = val.filter(val => val.startsWith("!")).map(val => val.slice(1));
                 }
-                if (notEqVals.length) {
+                if (notEqVals && notEqVals.length) {
                     notFilters.push({terms: {[key]: notEqVals}});
                 }
             }
