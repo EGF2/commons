@@ -45,9 +45,8 @@ class Searcher {
                 let notEqVals;
                 if (val[0] === "!") {
                     filedExists = key;
-                } else {
-                    notEqVals = val.filter(val => val.startsWith("!")).map(val => val.slice(1));
                 }
+                notEqVals = val.filter(val => val.startsWith("!")).map(val => val.slice(1));
                 if (notEqVals && notEqVals.length) {
                     notFilters.push({terms: {[key]: notEqVals}});
                 }
