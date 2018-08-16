@@ -104,8 +104,12 @@ class Searcher {
             if (notFilters.length) {
                 query.query.bool.must_not = notFilters;
             }
-            if (filedExists) {
-                query.query.bool.must_not = { exists: { field : filedExists } };
+
+            if (!notFilters.length && filedExists) {
+                query.query.bool.must_not = [{ exists: { field : filedExists } }];
+            }
+            if (notFilters.length && filedExists) {
+                query.query.bool.must_not.push({ exists: { field : filedExists } });
             }
         }
 
