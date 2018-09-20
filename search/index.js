@@ -22,7 +22,7 @@ class Searcher {
             }
 
             if (val === "-") {
-                filters.push({missing: {field: key}});
+                filters.push({ missing: { field: key } });
             } else if (dateRegExp.test(val)) {
                 filters.push({
                     range: {
@@ -39,7 +39,7 @@ class Searcher {
 
                 let eqVals = val.filter(val => !val.startsWith("!"));
                 if (eqVals && eqVals.length) {
-                    filters.push({terms: {[key]: eqVals}});
+                    filters.push({ terms: { [key]: eqVals } });
                 }
 
                 let notEqVals;
@@ -48,7 +48,7 @@ class Searcher {
                 }
                 notEqVals = val.filter(val => val.startsWith("!")).map(val => val.slice(1));
                 if (notEqVals && notEqVals.length) {
-                    notFilters.push({terms: {[key]: notEqVals}});
+                    notFilters.push({ terms: { [key]: notEqVals } });
                 }
             }
         });
@@ -70,7 +70,7 @@ class Searcher {
             });
         }
 
-        let query = {query: {}};
+        let query = { query: {} };
 
         let isEmail = /^(?:[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
 
@@ -106,10 +106,10 @@ class Searcher {
             }
 
             if (!notFilters.length && filedExists) {
-                query.query.bool.must_not = [{ exists: { field : filedExists } }];
+                query.query.bool.must_not = [{ exists: { field: filedExists } }];
             }
             if (notFilters.length && filedExists) {
-                query.query.bool.must_not.push({ exists: { field : filedExists } });
+                query.query.bool.must_not.push({ exists: { field: filedExists } });
             }
         }
 
@@ -131,10 +131,10 @@ class Searcher {
         if (options.sort) {
             options.sort.forEach(sort => {
                 let sortField = sort.split("(")[0];
-                query.sort.push({[sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc"});
+                query.sort.push({ [sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc" });
             });
         }
-        query.sort.push({id: "asc"})
+        query.sort.push({ id: "asc" })
 
         return query;
     }
@@ -163,15 +163,26 @@ class Searcher {
 
         return query.then(searchAfter => {
             let request = this.createRequest(options);
-            // if (searchAfter) {
-            //     request.search_after = searchAfter;
-            // }
+            // Fix default sort by id for npi search
+            if (options.object === "npi_location" || options.object === "npi_entity") {
+                request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
+                request.sort.push({npi: "asc"});
+            }
             return this.elastic.search({
                 index: options.object,
                 type: options.object,
                 body: request
             });
         }).then(body => {
+            // Fix for npi search
+            if (options.object === "npi_location" || options.object === "npi_entity") {
+                let res = {
+                    results: body.hits.hits.map(doc => doc._source),
+                    count: body.hits.total
+                };
+                return res;
+            }
+            // Regular search
             let res = {
                 results: body.hits.hits.map(doc => doc._id),
                 count: body.hits.total
