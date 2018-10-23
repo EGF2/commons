@@ -164,6 +164,10 @@ class Searcher {
         return query.then(searchAfter => {
             let request = this.createRequest(options);
             // Fix default sort by id for npi search
+            if (options.object === "log_line") {
+                request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
+                request.sort.push({timestamp: "desc"});
+            }
             if (options.object === "npi_location" || options.object === "npi_entity") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
                 request.sort.push({npi: "asc"});
@@ -176,6 +180,14 @@ class Searcher {
         }).then(body => {
             // Fix for npi search
             if (options.object === "npi_location" || options.object === "npi_entity") {
+                let res = {
+                    results: body.hits.hits.map(doc => doc._source),
+                    count: body.hits.total
+                };
+                return res;
+            }
+
+            if (options.object === "log_line") {
                 let res = {
                     results: body.hits.hits.map(doc => doc._source),
                     count: body.hits.total
