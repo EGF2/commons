@@ -21,8 +21,8 @@ class Searcher {
                 val = val[0];
             }
 
-            if (val === "-") {
-                filters.push({ missing: { field: key } });
+            if (val === "exists") {
+                filters.push({ exists: { field: key } });
             } else if (dateRegExp.test(val)) {
                 filters.push({
                     range: {
