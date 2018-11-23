@@ -157,7 +157,7 @@ class Searcher {
                 if (body.hits.hits.length) {
                     return body.hits.hits[0].sort;
                 }
-                throw new Error("Incorrect parameter 'after'");
+                // throw new Error("Incorrect parameter 'after'");
             });
         }
 
