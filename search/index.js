@@ -87,6 +87,7 @@ class Searcher {
                 reg = /[^\w\s]/gi;
             }
             query.query.bool = query.query.bool || {};
+            options.q = options.q.replace("AND", "and");
             options.q = options.q.split(" ").join(" AND ");
             query.query.bool.must = {
                 query_string: {
