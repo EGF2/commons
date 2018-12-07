@@ -16,7 +16,7 @@ function newClient(url) {
                 }
                 resolve(obj);
             };
-            let options = {path};
+            let options = { path };
             if (author) {
                 options.headers = {
                     "Author": author
@@ -46,7 +46,7 @@ function newClient(url) {
         /**
          * Get graph config
          */
-        getGraphConfig: function() {
+        getGraphConfig: function () {
             if (graphConfig) {
                 return Promise.resolve(graphConfig);
             }
@@ -66,7 +66,7 @@ function newClient(url) {
         /**
          * Get edge config
          */
-        getEdgeConfig: function(objOrID, edgeName) {
+        getEdgeConfig: function (objOrID, edgeName) {
             return this.getGraphConfig().then(config => {
                 let objectType;
                 if (typeof objOrID === "string") {
@@ -92,14 +92,14 @@ function newClient(url) {
         /**
          * Get object type by ID
          */
-        getObjectType: function(id) {
+        getObjectType: function (id) {
             return this.getGraphConfig().then(() => codeToObjectType[id.slice(-2)]);
         },
 
         /**
          * Get object
          */
-        getObject: function(id, options) {
+        getObject: function (id, options) {
             return handle("GET", `/v1/graph/${id}`).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
@@ -108,7 +108,7 @@ function newClient(url) {
         /**
          * Get objects
          */
-        getObjects: function(ids, options) {
+        getObjects: function (ids, options) {
             ids = Array.from(arguments);
             if (typeof ids.slice(-1)[0] === "object") {
                 options = ids.slice(-1)[0];
@@ -142,7 +142,7 @@ function newClient(url) {
         /**
          * Get edge
          */
-        getEdge: function(srcID, edgeName, dstID, options) {
+        getEdge: function (srcID, edgeName, dstID, options) {
             return handle("GET", `/v1/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
@@ -151,7 +151,7 @@ function newClient(url) {
         /**
          * Get edges
          */
-        getEdges: function(srcID, edgeName, options) {
+        getEdges: function (srcID, edgeName, options) {
             let url = `/v1/graph/${srcID}/${edgeName}`;
             if (options) {
                 let params = [];
@@ -208,7 +208,7 @@ function newClient(url) {
         /**
          * Expand object or page results with expand
          */
-        expand: function(object, expand) {
+        expand: function (object, expand) {
             // array of objects which need expand
             let objects = [];
             if (object.results && object.count) {
@@ -223,24 +223,24 @@ function newClient(url) {
             let current = ""; // current expand item
             expand.split("").forEach(ch => {
                 switch (ch) {
-                case ",":
-                    if (curly === 0) {
-                        expandMap[current] = "";
-                        current = "";
-                    } else {
+                    case ",":
+                        if (curly === 0) {
+                            expandMap[current] = "";
+                            current = "";
+                        } else {
+                            current += ch;
+                        }
+                        break;
+                    case "{":
                         current += ch;
-                    }
-                    break;
-                case "{":
-                    current += ch;
-                    curly++;
-                    break;
-                case "}":
-                    current += ch;
-                    curly--;
-                    break;
-                default:
-                    current += ch;
+                        curly++;
+                        break;
+                    case "}":
+                        current += ch;
+                        curly--;
+                        break;
+                    default:
+                        current += ch;
                 }
             });
             if (current) {
@@ -255,35 +255,37 @@ function newClient(url) {
             });
 
             // apply expandMap to objects
-            objects = objects.map(obj => {
-                return this.getGraphConfig().then(config => {
-                    let objCfg = config[obj.object_type]; // object config
-                    let promises = [];
-                    Object.keys(expandMap).forEach(field => {
-                        let options = {
-                            expand: expandMap[field]
-                        };
-                        let split = field.split("(");
-                        field = split[0];
-                        if (split[1]) {
-                            options.count = split[1].slice(0, -1);
-                        }
-                        let promise;
-                        if (field in obj && field in objCfg.fields) {
-                            promise = this.getObject(obj[field], options);
-                        } else if (objCfg.edges && field in objCfg.edges) {
-                            promise = this.getEdges(obj.id, field, options);
-                        }
-                        if (promise) {
-                            promises.push(promise.then(res => {
-                                obj[field] = res;
-                            }));
-                        }
+            if (objects[0].results.length) {
+                objects = objects.map(obj => {
+                    return this.getGraphConfig().then(config => {
+                        let objCfg = config[obj.object_type]; // object config
+                        let promises = [];
+                        Object.keys(expandMap).forEach(field => {
+                            let options = {
+                                expand: expandMap[field]
+                            };
+                            let split = field.split("(");
+                            field = split[0];
+                            if (split[1]) {
+                                options.count = split[1].slice(0, -1);
+                            }
+                            let promise;
+                            if (field in obj && field in objCfg.fields) {
+                                promise = this.getObject(obj[field], options);
+                            } else if (objCfg.edges && field in objCfg.edges) {
+                                promise = this.getEdges(obj.id, field, options);
+                            }
+                            if (promise) {
+                                promises.push(promise.then(res => {
+                                    obj[field] = res;
+                                }));
+                            }
+                        });
+                        return Promise.all(promises);
                     });
-                    return Promise.all(promises);
                 });
-            });
-            return Promise.all(objects).then(() => object);
+                return Promise.all(objects).then(() => object);
+            }
         }
     };
 }
