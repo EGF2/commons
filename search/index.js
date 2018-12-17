@@ -145,12 +145,6 @@ class Searcher {
         let query = Promise.resolve();
         if (options.after) {
             let request = this.createRequest(options);
-            // request.query.bool = request.query.bool || {};
-            // request.query.bool.filter = {
-            //     term: {
-            //         id: options.after
-            //     }
-            // };
             query = this.elastic.search({
                 index: options.object,
                 type: options.object,
@@ -172,7 +166,7 @@ class Searcher {
             }
             if (options.object === "npi_location" || options.object === "npi_entity") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
-                request.sort.push({npi: "asc"});
+                request.sort.push({npi_sort: "asc"});
             }
             return this.elastic.search({
                 index: options.object,
