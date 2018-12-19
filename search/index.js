@@ -164,9 +164,13 @@ class Searcher {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
                 request.sort.push({timestamp: "desc"});
             }
-            if (options.object === "npi_location" || options.object === "npi_entity") {
+            if (options.object === "npi_entity") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
                 request.sort.push({npi_sort: "asc"});
+            }
+            if (options.object === "npi_location") {
+                request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
+                request.sort.push({npi: "asc"});
             }
             return this.elastic.search({
                 index: options.object,
