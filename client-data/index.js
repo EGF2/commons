@@ -22,7 +22,6 @@ function newClient(url) {
                     "Author": author
                 };
             }
-
             if (method === "GET") {
                 client.get(options, callback);
             } else if (method === "POST") {
@@ -99,8 +98,8 @@ function newClient(url) {
         /**
          * Get object
          */
-        getObject: function (id, options) {
-            return handle("GET", `/v1/graph/${id}`).then(result =>
+        getObject: function (id, options, author) {
+            return handle("GET", `/v1/graph/${id}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -108,13 +107,13 @@ function newClient(url) {
         /**
          * Get objects
          */
-        getObjects: function (ids, options) {
+        getObjects: function (ids, options, author) {
             ids = Array.from(arguments);
             if (typeof ids.slice(-1)[0] === "object") {
                 options = ids.slice(-1)[0];
                 ids = ids.slice(0, -1);
             }
-            return handle("GET", `/v1/graph/${ids.join(",")}`).then(result =>
+            return handle("GET", `/v1/graph/${ids.join(",")}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
