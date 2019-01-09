@@ -49,7 +49,7 @@ function newClient(url) {
             if (graphConfig) {
                 return Promise.resolve(graphConfig);
             }
-            return handle("GET", "/v1/graph")
+            return handle("GET", "/v1/client-data/graph")
                 .then(result => {
                     graphConfig = result;
                     codeToObjectType = {};
@@ -99,7 +99,7 @@ function newClient(url) {
          * Get object
          */
         getObject: function (id, options, author) {
-            return handle("GET", `/v1/graph/${id}`, "", author).then(result =>
+            return handle("GET", `/v1/client-data/graph/${id}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -113,7 +113,7 @@ function newClient(url) {
                 options = ids.slice(-1)[0];
                 ids = ids.slice(0, -1);
             }
-            return handle("GET", `/v1/graph/${ids.join(",")}`, "", author).then(result =>
+            return handle("GET", `/v1/client-data/graph/${ids.join(",")}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -121,28 +121,28 @@ function newClient(url) {
         /**
          * Create object
          */
-        createObject: (object, author) => handle("POST", "/v1/graph", object, author),
+        createObject: (object, author) => handle("POST", "/v1/client-data/graph", object, author),
 
         /**
          * Update object
          */
-        updateObject: (id, delta, author) => handle("PATCH", `/v1/graph/${id}`, delta, author),
+        updateObject: (id, delta, author) => handle("PATCH", `/v1/client-data/graph/${id}`, delta, author),
 
         /**
          * Replace object
          */
-        replaceObject: (id, object, author) => handle("PUT", `/v1/graph/${id}`, object, author),
+        replaceObject: (id, object, author) => handle("PUT", `/v1/client-data/graph/${id}`, object, author),
 
         /**
          * Delete object
          */
-        deleteObject: (id, author) => handle("DELETE", `/v1/graph/${id}`, undefined, author),
+        deleteObject: (id, author) => handle("DELETE", `/v1/client-data/graph/${id}`, undefined, author),
 
         /**
          * Get edge
          */
         getEdge: function (srcID, edgeName, dstID, options) {
-            return handle("GET", `/v1/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
+            return handle("GET", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -151,7 +151,7 @@ function newClient(url) {
          * Get edges
          */
         getEdges: function (srcID, edgeName, options) {
-            let url = `/v1/graph/${srcID}/${edgeName}`;
+            let url = `/v1/client-data/graph/${srcID}/${edgeName}`;
             if (options) {
                 let params = [];
                 if (options.after !== undefined) {
@@ -172,17 +172,17 @@ function newClient(url) {
         /**
          * Create edge
          */
-        createEdge: (srcID, edgeName, dstID, author) => handle("POST", `/v1/graph/${srcID}/${edgeName}/${dstID}`, {}, author),
+        createEdge: (srcID, edgeName, dstID, author) => handle("POST", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author),
 
         /**
          * Delete edge
          */
-        deleteEdge: (srcID, edgeName, dstID, author) => handle("DELETE", `/v1/graph/${srcID}/${edgeName}/${dstID}`, undefined, author),
+        deleteEdge: (srcID, edgeName, dstID, author) => handle("DELETE", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author),
 
         /**
          * Create audit
          */
-        createAudit: (auditLog, author) => handle("POST", "/v1/audit", auditLog, author),
+        createAudit: (auditLog, author) => handle("POST", "/v1/client-data/audit", auditLog, author),
 
         /**
          * Handle all pages
