@@ -156,22 +156,22 @@ class Searcher {
                 // throw new Error("Incorrect parameter 'after'");
             });
         }
-
         return query.then(searchAfter => {
             let request = this.createRequest(options);
             // Fix default sort by id for npi search
             if (options.object === "log_line") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
-                request.sort.push({timestamp: "desc"});
+                request.sort.push({ timestamp: "desc" });
             }
             if (options.object === "npi_entity") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
-                request.sort.push({npi_sort: "asc"});
+                request.sort.push({ npi_sort: "asc" });
             }
             if (options.object === "npi_location") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
-                request.sort.push({npi: "asc"});
+                request.sort.push({ npi: "asc" });
             }
+
             return this.elastic.search({
                 index: options.object,
                 type: options.object,
@@ -179,15 +179,8 @@ class Searcher {
             });
         }).then(body => {
             // Fix for npi search
-            if (options.object === "npi_location" || options.object === "npi_entity") {
-                let res = {
-                    results: body.hits.hits.map(doc => doc._source),
-                    count: body.hits.total
-                };
-                return res;
-            }
-
-            if (options.object === "log_line") {
+            if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line" ||
+                options.object === "laboratory_reqs") {
                 let res = {
                     results: body.hits.hits.map(doc => doc._source),
                     count: body.hits.total
@@ -204,6 +197,7 @@ class Searcher {
                 res.last = body.hits.hits.slice(-1)[0]._source.id;
             }
             return res;
+
         });
     }
 }
