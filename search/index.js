@@ -69,8 +69,42 @@ class Searcher {
                 range: range
             });
         }
+        let query;
 
-        let query = { query: {} };
+        if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum") {
+            query = {
+                query: {
+
+                },
+                aggs: {
+
+                }
+            };
+
+            query.aggs[options.object] = {
+                sum: {
+                    field: "tat"
+                }
+            };
+        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "average") {
+            query = {
+                query: {
+
+                },
+                aggs: {
+
+                }
+            };
+
+            query.aggs[options.object] = {
+                avg: {
+                    field: "tat"
+                }
+            };
+
+        } else {
+            query = { query: {} };
+        }
 
         let isEmail = /^(?:[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
 
@@ -180,10 +214,11 @@ class Searcher {
         }).then(body => {
             // Fix for npi search
             if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line" ||
-                options.object === "laboratory_reqs") {
+                options.object === "laboratory_reqs" || options.object === "distributor_reqs") {
                 let res = {
                     results: body.hits.hits.map(doc => doc._source),
-                    count: body.hits.total
+                    count: body.hits.total,
+                    aggregations: body.aggregations ? body.aggregations : ""
                 };
                 return res;
             }
