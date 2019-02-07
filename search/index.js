@@ -71,7 +71,23 @@ class Searcher {
         }
         let query;
 
-        if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum") {
+        if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.group_by) {
+
+            query = {
+                query: {
+
+                },
+                aggs: {
+
+                }
+            };
+
+            query.aggs[options.object] = {
+                terms: {
+                    field: options.group_by
+                }
+            };
+        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum") {
             query = {
                 query: {
 
