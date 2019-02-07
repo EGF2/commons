@@ -72,6 +72,11 @@ class Searcher {
         let query;
 
         if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.group_by) {
+            console.log("options.group_by")
+            console.log("options.group_by")
+            console.log("options.group_by")
+            console.log("options.group_by")
+            console.log("options.group_by", options.group_by)
 
             query = {
                 query: {
@@ -87,7 +92,7 @@ class Searcher {
                     field: options.group_by
                 }
             };
-        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum") {
+        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum" && !options.group_by) {
             query = {
                 query: {
 
@@ -102,7 +107,7 @@ class Searcher {
                     field: "tat"
                 }
             };
-        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "average") {
+        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "average" && !options.group_by) {
             query = {
                 query: {
 
@@ -121,6 +126,12 @@ class Searcher {
         } else {
             query = { query: {} };
         }
+
+        console.log("query")
+        console.log("query")
+        console.log("query")
+        console.log("query")
+        console.log("query", query)
 
         let isEmail = /^(?:[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
 
@@ -228,6 +239,12 @@ class Searcher {
                 body: request
             });
         }).then(body => {
+            console.log("body")
+            console.log("body")
+            console.log("body")
+            console.log("body")
+            console.log("body")
+            console.log("body",body)
             // Fix for npi search
             if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line" ||
                 options.object === "laboratory_reqs" || options.object === "distributor_reqs") {
