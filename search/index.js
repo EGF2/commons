@@ -234,7 +234,10 @@ class Searcher {
                     results: body.hits.hits.map(doc => doc._source),
                     count: body.hits.total,
                     aggregations: body.aggregations ? body.aggregations : "",
-                    test: { options: options ? options : "", query: query ? query : "", body: body ? body : "" }
+                    options: options ? options : "",
+                    query: query ? query : "",
+                    body: body ? body : ""
+
                 };
                 return res;
             }
