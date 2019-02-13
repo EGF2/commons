@@ -228,15 +228,19 @@ class Searcher {
             });
         }).then(body => {
             // Fix for npi search
-            if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line" ||
-                options.object === "laboratory_reqs" || options.object === "distributor_reqs") {
+            if (options.object === "laboratory_reqs" || options.object === "distributor_reqs") {
                 let res = {
                     results: body.hits.hits.map(doc => doc._source),
                     count: body.hits.total,
-                    aggregations: body.aggregations ? body.aggregations : "",
-                    options: options ? options : "",
-                    query: query ? query : "",
-                    body: body ? body : ""
+                    aggregations: body.aggregations ? body.aggregations : ""
+
+                };
+                return res;
+            }
+            if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line") {
+                let res = {
+                    results: body.hits.hits.map(doc => doc._source),
+                    count: body.hits.total
 
                 };
                 return res;
