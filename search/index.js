@@ -14,7 +14,6 @@ class Searcher {
     createRequest(options) {
         let filters = [];
         let notFilters = [];
-        let filedExists;
         Object.keys(options.filters || {}).forEach(key => {
             let val = options.filters[key];
             if (val.length === 1) {
@@ -44,10 +43,10 @@ class Searcher {
 
                 let notEqVals;
                 if (val[0] === "!") {
-                    filedExists = key;
+                    notFilters.push({ exists: { field: key } });
                 }
                 notEqVals = val.filter(val => val.startsWith("!")).map(val => val.slice(1));
-                if (notEqVals && notEqVals.length) {
+                if (notEqVals && notEqVals.length && !!notEqVals[0]) {
                     notFilters.push({ terms: { [key]: notEqVals } });
                 }
             }
@@ -147,20 +146,13 @@ class Searcher {
             };
         }
 
-        if (filters.length || notFilters.length || filedExists) {
+        if (filters.length || notFilters.length) {
             query.query.bool = query.query.bool || {};
             if (filters.length) {
                 query.query.bool.filter = filters;
             }
             if (notFilters.length) {
                 query.query.bool.must_not = notFilters;
-            }
-
-            if (!notFilters.length && filedExists) {
-                query.query.bool.must_not = [{ exists: { field: filedExists } }];
-            }
-            if (notFilters.length && filedExists) {
-                query.query.bool.must_not.push({ exists: { field: filedExists } });
             }
         }
 
