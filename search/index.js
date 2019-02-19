@@ -10,47 +10,33 @@ class Searcher {
     constructor(config) {
         this.elastic = new elasticsearch.Client(config);
     }
+    parsFilter(filters) {
+        const res = { bool: {} };
+        Object.keys(filters).map(item => {
+            let operator;
+            if (item === "AND") operator = "must";
+            else if (item === "OR") operator = "should";
+            res.bool[operator] = [];
+            Object.keys(filters[item]).map(key => {
+                if (key === "AND" || key === "OR") {
+                    const resSub = this.parsFilter({ [key]: filters[item][key] });
+                    res.bool[operator].push(resSub);
+                    return;
+                }
+                if (filters[item][key][0] === "!") res.bool[operator].push({ bool: { must_not: { exists: { field: key } } } });
+                else if (filters[item][key][0] === "") res.bool[operator].push({ exists: { field: key } });
+                else filters[item][key].map(item => { res.bool[operator].push({ term: { [key]: item } }) });
+            });
+        });
+        return res;
+    }
 
     createRequest(options) {
         let filters = [];
-        let notFilters = [];
-        Object.keys(options.filters || {}).forEach(key => {
-            let val = options.filters[key];
-            if (val.length === 1) {
-                val = val[0];
-            }
 
-            if (val === "exists") {
-                filters.push({ exists: { field: key } });
-            } else if (dateRegExp.test(val)) {
-                filters.push({
-                    range: {
-                        [key]: {
-                            gte: val,
-                            lt: val + "||+1d"
-                        }
-                    }
-                });
-            } else {
-                if (!Array.isArray(val)) {
-                    val = [val];
-                }
-
-                let eqVals = val.filter(val => !val.startsWith("!"));
-                if (eqVals && eqVals.length) {
-                    filters.push({ terms: { [key]: eqVals } });
-                }
-
-                let notEqVals;
-                if (val[0] === "!") {
-                    notFilters.push({ exists: { field: key } });
-                }
-                notEqVals = val.filter(val => val.startsWith("!")).map(val => val.slice(1));
-                if (notEqVals && notEqVals.length && !!notEqVals[0]) {
-                    notFilters.push({ terms: { [key]: notEqVals } });
-                }
-            }
-        });
+        if (options.filters) {
+            filters = this.parsFilter(options.filters);
+        }
 
         let range = {};
         Object.keys(options.range || {}).forEach(key => {
@@ -62,22 +48,16 @@ class Searcher {
                 range[key].lte = options.range[key].lte;
             }
         });
-
+        const filterRange = [];
         if (Object.keys(range).length) {
-            filters.push({
-                range: range
-            });
+            filterRange.push({ range: range });
         }
         let query;
 
         if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.group_by) {
             query = {
-                query: {
-
-                },
-                aggs: {
-
-                }
+                query: {},
+                aggs: {}
             };
 
             query.aggs[options.object] = {
@@ -87,12 +67,8 @@ class Searcher {
             };
         } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum" && !options.group_by) {
             query = {
-                query: {
-
-                },
-                aggs: {
-
-                }
+                query: {},
+                aggs: {}
             };
 
             query.aggs[options.object] = {
@@ -102,12 +78,8 @@ class Searcher {
             };
         } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "average" && !options.group_by) {
             query = {
-                query: {
-
-                },
-                aggs: {
-
-                }
+                query: {},
+                aggs: {}
             };
 
             query.aggs[options.object] = {
@@ -115,7 +87,6 @@ class Searcher {
                     field: "tat"
                 }
             };
-
         } else {
             query = { query: {} };
         }
@@ -146,20 +117,6 @@ class Searcher {
             };
         }
 
-        if (filters.length || notFilters.length) {
-            query.query.bool = query.query.bool || {};
-            if (filters.length) {
-                query.query.bool.filter = filters;
-            }
-            if (notFilters.length) {
-                query.query.bool.must_not = notFilters;
-            }
-        }
-
-        if (!filters.length && !notFilters.length && !options.q) {
-            query.query.match_all = {};
-        }
-
         if (options.count) {
             query.size = options.count;
         }
@@ -178,7 +135,8 @@ class Searcher {
             });
         }
         query.sort.push({ id: "asc" })
-
+        query.query.bool = filters.bool;
+        query.query.bool.filter = filterRange;
         return query;
     }
 
@@ -247,7 +205,6 @@ class Searcher {
                 res.last = body.hits.hits.slice(-1)[0]._source.id;
             }
             return res;
-
         });
     }
 }
