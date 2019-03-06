@@ -134,8 +134,18 @@ class Searcher {
                 query.sort.push({ [sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc" });
             });
         }
-        query.sort.push({ id: "asc" })
-        query.query.bool = filters.bool;
+        query.sort.push({ id: "asc" });
+        if (query.query.bool && query.query.bool.must) {
+            if (filters.bool.must) {
+                filters.bool.must.push(query.query.bool.must);
+                query.query.bool = filters.bool;
+            } else {
+                const query_string = query.query.bool.must;
+                query.query.bool.must = [query_string, {bool: filters.bool}];
+            }
+        } else {
+            query.query.bool = filters.bool;
+        }
         query.query.bool.filter = filterRange;
         return query;
     }
