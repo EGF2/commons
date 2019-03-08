@@ -10,7 +10,10 @@ class Searcher {
     constructor(config) {
         this.elastic = new elasticsearch.Client(config);
     }
-    parsFilter(filters) {
+    parseFilter(filters) {
+        if (!(Object.keys(filters)).includes("AND") && !(Object.keys(filters)).includes("OR")) {
+            return this.parseFiltersFromService(filters);
+        }
         const res = { bool: {} };
         Object.keys(filters).map(item => {
             let operator;
@@ -19,7 +22,7 @@ class Searcher {
             res.bool[operator] = [];
             Object.keys(filters[item]).map(key => {
                 if (key === "AND" || key === "OR") {
-                    const resSub = this.parsFilter({ [key]: filters[item][key] });
+                    const resSub = this.parseFilter({ [key]: filters[item][key] });
                     res.bool[operator].push(resSub);
                     return;
                 }
@@ -30,12 +33,20 @@ class Searcher {
         });
         return res;
     }
-
+    parseFiltersFromService(filters) {
+        const res = { bool: { must: [] } };
+        for (const field of Object.keys(filters)) {
+            if (filters[field] === "!") res.bool.must.push({ bool: { must_not: { exists: { field: field } } } });
+            else if (filters[field] === "") res.bool.must.push({ exists: { field: field } });
+            else res.bool.must.push({ term: { [field]: filters[field] } });
+        }
+        return res;
+    }
     createRequest(options) {
         let filters = [];
 
         if (options.filters) {
-            filters = this.parsFilter(options.filters);
+            filters = this.parseFilter(options.filters);
         }
 
         let range = {};
@@ -141,7 +152,7 @@ class Searcher {
                 query.query.bool = filters.bool;
             } else {
                 const query_string = query.query.bool.must;
-                query.query.bool.must = [query_string, {bool: filters.bool}];
+                query.query.bool.must = [query_string, { bool: filters.bool }];
             }
         } else {
             query.query.bool = filters.bool;
