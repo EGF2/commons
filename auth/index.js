@@ -51,16 +51,11 @@ class Client {
         let client = this.client;
         return new Promise((resolve, reject) => {
             let token;
-        
-            try {
-                if (typeof reqOrToken === "string") {
-                    token = reqOrToken;
-                } else {
-                    token = _getToken(reqOrToken);
-                }
-            } catch(err) {
-                console.log("COMMONS 1", err)
 
+            if (typeof reqOrToken === "string") {
+                token = reqOrToken;
+            } else {
+                token = _getToken(reqOrToken);
             }
 
             client.get(`/v1/internal/auth/session?token=${token}`, (err, req, res, obj) => {
@@ -68,7 +63,6 @@ class Client {
                     return reject(new restify.UnauthorizedError("Bearer token doesn't exist"));
                 }
                 if (err) {
-                    console.log("COMMONS 2", err)
                     return reject(err);
                 }
                 resolve(obj);
