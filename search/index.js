@@ -28,7 +28,10 @@ class Searcher {
                 }
                 if (filters[item][key][0] === "!") res.bool[operator].push({ bool: { must_not: { exists: { field: key } } } });
                 else if (filters[item][key][0] === "") res.bool[operator].push({ exists: { field: key } });
-                else filters[item][key].map(item => { res.bool[operator].push({ term: { [key]: item } }) });
+                else filters[item][key].map(item => {
+                    if (item[0] === "!") res.bool[operator].push({ bool: { must_not: { term: { [key]: item.slice(1) } } } });
+                    else res.bool[operator].push({ term: { [key]: item } })
+                });
             });
         });
         return res;
