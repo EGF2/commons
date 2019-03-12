@@ -30,6 +30,7 @@ class Searcher {
                 else if (filters[item][key][0] === "") res.bool[operator].push({ exists: { field: key } });
                 else filters[item][key].map(item => {
                     if (item[0] === "!") res.bool[operator].push({ bool: { must_not: { term: { [key]: item.slice(1) } } } });
+                    else if (item.toLowerCase() === "exists") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
                     else res.bool[operator].push({ term: { [key]: item } })
                 });
             });
