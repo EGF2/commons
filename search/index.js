@@ -48,6 +48,8 @@ class Searcher {
     }
     createRequest(options) {
         let filters = [];
+        let sort_by_val = options.sort_by.split("(")[1].split(")")[0];
+        let sort_by_field = options.sort_by.split("(")[0];
 
         if (options.filters) {
             filters = this.parseFilter(options.filters);
@@ -80,6 +82,14 @@ class Searcher {
                     field: options.group_by
                 }
             };
+            if (options.sort_by && sort_by_val && sort_by_field) {
+                if (sort_by_field === "result") {
+                    query.aggs[options.object].terms.order = { _count: sort_by_val }
+                }
+                if (sort_by_field === "object_name") {
+                    query.aggs[options.object].terms.order = { _key: sort_by_val }
+                }
+            }
         } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum" && !options.group_by) {
             query = {
                 query: {},
