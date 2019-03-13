@@ -48,8 +48,12 @@ class Searcher {
     }
     createRequest(options) {
         let filters = [];
-        let sort_by_val = options.sort_by.split("(")[1].split(")")[0];
-        let sort_by_field = options.sort_by.split("(")[0];
+        let sort_by_val;
+        let sort_by_field;
+        if (options.sort_by) {
+            sort_by_val = options.sort_by.split("(")[1].split(")")[0];
+            sort_by_field = options.sort_by.split("(")[0];
+        }
 
         if (options.filters) {
             filters = this.parseFilter(options.filters);
