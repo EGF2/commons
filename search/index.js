@@ -10,31 +10,30 @@ class Searcher {
     constructor(config) {
         this.elastic = new elasticsearch.Client(config);
     }
-    parseFilter(filters) {
-        if (!(Object.keys(filters)).includes("AND") && !(Object.keys(filters)).includes("OR")) {
+    parseFilter(filters, rec) {
+        if (!(Object.keys(filters)).includes("AND") && !(Object.keys(filters)).includes("OR") && !rec) {
             return this.parseFiltersFromService(filters);
         }
-        const res = { bool: {} };
-        Object.keys(filters).map(item => {
-            let operator;
-            if (item === "AND") operator = "must";
-            else if (item === "OR") operator = "should";
-            res.bool[operator] = [];
-            Object.keys(filters[item]).map(key => {
-                if (key === "AND" || key === "OR") {
-                    const resSub = this.parseFilter({ [key]: filters[item][key] });
-                    res.bool[operator].push(resSub);
-                    return;
+
+        const operatorLogic = (Object.keys(filters))[0];
+        let operator;
+        if(operatorLogic === "AND") operator = "must";
+        else if (operatorLogic === "OR") operator = "should";
+        const res = { bool: { [operator]: [] } };
+        filters[operatorLogic].forEach(item => {
+            const objectKeys = Object.keys(item);
+            objectKeys.forEach(key => {
+                if (["AND", "OR"].includes(key)) res.bool[operator].push(this.parseFilter(item, true));
+                else {
+                    if (item[key] === "!") res.bool[operator].push({ bool: { must_not: { exists: { field: key } } } })
+                    else if (item[key][0] === "!") res.bool[operator].push({ bool: { must_not: { term: { [key]: item[key].slice(1) } } } })
+                    else if (item[key].toLowerCase() === "exists") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
+                    else if (item[key] === "") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
+                    else res.bool[operator].push({ term: { [key]: item[key] } })
                 }
-                if (filters[item][key][0] === "!") res.bool[operator].push({ bool: { must_not: { exists: { field: key } } } });
-                else if (filters[item][key][0] === "") res.bool[operator].push({ exists: { field: key } });
-                else filters[item][key].map(item => {
-                    if (item[0] === "!") res.bool[operator].push({ bool: { must_not: { term: { [key]: item.slice(1) } } } });
-                    else if (item.toLowerCase() === "exists") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
-                    else res.bool[operator].push({ term: { [key]: item } })
-                });
-            });
-        });
+
+            })
+        })
         return res;
     }
     parseFiltersFromService(filters) {
@@ -86,7 +85,6 @@ class Searcher {
                     field: options.group_by
                 }
             };
-           
             if (options.sort_by && sort_by_val && sort_by_field) {
                 if (sort_by_field === "result") {
                     query.aggs[options.object].terms.order = { _count: sort_by_val }
