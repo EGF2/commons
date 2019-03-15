@@ -83,7 +83,8 @@ class Searcher {
 
             query.aggs[options.object] = {
                 terms: {
-                    field: options.group_by
+                    field: options.group_by,
+                    size: 5000
                 }
             };
            
