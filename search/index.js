@@ -86,9 +86,7 @@ class Searcher {
                     field: options.group_by
                 }
             };
-            if (options.size) {
-                query.aggs[options.object].terms.size = options.size;
-            }
+           
             if (options.sort_by && sort_by_val && sort_by_field) {
                 if (sort_by_field === "result") {
                     query.aggs[options.object].terms.order = { _count: sort_by_val }
