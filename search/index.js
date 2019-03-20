@@ -182,7 +182,6 @@ class Searcher {
     search(options) {
         let query = Promise.resolve();
         if (options.after) {
-            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> options \n", options, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
             let request = this.createRequest(options);
             console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> request \n", request, request.query.bool.must, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
             query = this.elastic.search({
@@ -201,6 +200,8 @@ class Searcher {
         }
         return query.then(searchAfter => {
             let request = this.createRequest(options);
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> request1 \n", request, request.query.bool.must, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
             // Fix default sort by id for npi search
             if (options.object === "log_line") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
@@ -221,6 +222,10 @@ class Searcher {
                 body: request
             });
         }).then(body => {
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> body2 \n", body, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
+            if (body.hits.hits.length) {
+                body.hits.hits.forEach(el => console.log(el))
+            }
             // Fix for npi search
             if (options.object === "laboratory_reqs" || options.object === "distributor_reqs") {
                 let res = {
