@@ -182,12 +182,15 @@ class Searcher {
     search(options) {
         let query = Promise.resolve();
         if (options.after) {
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> options \n", options, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
             let request = this.createRequest(options);
+            console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> request \n", request, request.query.bool.must, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
             query = this.elastic.search({
                 index: options.object,
                 type: options.object,
                 body: request
             }).then(body => {
+                console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> body \n", body, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
                 if (body.hits.hits.length) {
                     return body.hits.hits[0].sort;
                 }
