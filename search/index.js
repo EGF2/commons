@@ -191,7 +191,9 @@ class Searcher {
                 body: request
             }).then(body => {
                 console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> body \n", body, "\n >>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
                 if (body.hits.hits.length) {
+                    body.hits.hits.forEach(el => console.log(el))
                     return body.hits.hits[0].sort;
                 }
                 // throw new Error("Incorrect parameter 'after'");
