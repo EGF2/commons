@@ -213,7 +213,7 @@ class Searcher {
                 };
                 return res;
             }
-            if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line") {
+            if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line" || options.object === "lab_test_position") {
                 let res = {
                     results: body.hits.hits.map(doc => doc._source),
                     count: body.hits.total
