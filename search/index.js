@@ -138,12 +138,21 @@ class Searcher {
             options.q = options.q.replace("AND", "and");
             options.q = options.q.replace(/  +/g, ' ');
             options.q = options.q.split(" ").join(" AND ");
-            query.query.bool.must = {
-                query_string: {
-                    query: `*${options.q}*`,
-                    fields: options.fields
-                }
-            };
+            if (options.q.includes("/") || options.q.includes("(") || options.q.includes(")")) {
+                query.query.bool.must = {
+                    simple_query_string: {
+                        query: `*${options.q}*`,
+                        fields: options.fields
+                    }
+                };
+            } else {
+                query.query.bool.must = {
+                    query_string: {
+                        query: `*${options.q}*`,
+                        fields: options.fields
+                    }
+                };
+            }  
         }
 
         if (options.count) {
