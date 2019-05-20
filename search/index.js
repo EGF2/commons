@@ -17,7 +17,7 @@ class Searcher {
 
         const operatorLogic = (Object.keys(filters))[0];
         let operator;
-        if(operatorLogic === "AND") operator = "must";
+        if (operatorLogic === "AND") operator = "must";
         else if (operatorLogic === "OR") operator = "should";
         const res = { bool: { [operator]: [] } };
         filters[operatorLogic].forEach(item => {
@@ -152,7 +152,7 @@ class Searcher {
                         fields: options.fields
                     }
                 };
-            }  
+            }
         }
 
         if (options.count) {
@@ -222,7 +222,8 @@ class Searcher {
                 };
                 return res;
             }
-            if (options.object === "npi_location" || options.object === "npi_entity" || options.object === "log_line" || options.object === "lab_test_position") {
+            const returnObject = ["npi_location", "npi_entity", "log_line", "lab_test_position", "zip_code"];
+            if (returnObject.includes(options.object)) {
                 let res = {
                     results: body.hits.hits.map(doc => doc._source),
                     count: body.hits.total
