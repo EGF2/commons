@@ -8,7 +8,7 @@ function newClient(url) {
         version: "*"
     });
 
-    let handle = (method, path, body, author) =>
+    let handle = (method, path, body, author, suppressEvent) =>
         new Promise((resolve, reject) => {
             let callback = (err, req, res, obj) => {
                 if (err) {
@@ -21,6 +21,11 @@ function newClient(url) {
                 options.headers = {
                     "Author": author
                 };
+            }
+            if (suppressEvent) {
+                options.headers = {
+                    suppressEvent: true
+                }
             }
             if (method === "GET") {
                 client.get(options, callback);
@@ -120,22 +125,22 @@ function newClient(url) {
         /**
          * Create object
          */
-        createObject: (object, author) => handle("POST", "/v1/client-data/graph", object, author),
+        createObject: (object, author, suppressEvent) => handle("POST", "/v1/client-data/graph", object, author, suppressEvent),
 
         /**
          * Update object
          */
-        updateObject: (id, delta, author) => handle("PATCH", `/v1/client-data/graph/${id}`, delta, author),
+        updateObject: (id, delta, author, suppressEvent) => handle("PATCH", `/v1/client-data/graph/${id}`, delta, author, suppressEvent),
 
         /**
          * Replace object
          */
-        replaceObject: (id, object, author) => handle("PUT", `/v1/client-data/graph/${id}`, object, author),
+        replaceObject: (id, object, author, suppressEvent) => handle("PUT", `/v1/client-data/graph/${id}`, object, author, suppressEvent),
 
         /**
          * Delete object
          */
-        deleteObject: (id, author) => handle("DELETE", `/v1/client-data/graph/${id}`, undefined, author),
+        deleteObject: (id, author, suppressEvent) => handle("DELETE", `/v1/client-data/graph/${id}`, undefined, author, suppressEvent),
 
         /**
          * Get edge
@@ -171,12 +176,12 @@ function newClient(url) {
         /**
          * Create edge
          */
-        createEdge: (srcID, edgeName, dstID, author) => handle("POST", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author),
+        createEdge: (srcID, edgeName, dstID, author, suppressEvent) => handle("POST", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, suppressEvent),
 
         /**
          * Delete edge
          */
-        deleteEdge: (srcID, edgeName, dstID, author) => handle("DELETE", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author),
+        deleteEdge: (srcID, edgeName, dstID, author, suppressEvent) => handle("DELETE", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, suppressEvent),
 
         /**
          * Create audit
