@@ -10,7 +10,7 @@ function newClient(url) {
     // Time in ms
     const startTimeout = 5;
     const deltaInterval = 20;
-    const maxTimeout = 2000;
+    const maxTimeout = 3500;
 
     let request = (method, params) =>
         new Promise((resolve, reject) => {
@@ -49,13 +49,16 @@ function newClient(url) {
             }
         }
         let err;
-        for (let i = startTimeout; i <= maxTimeout; i += deltaInterval) {
+        let waitTime = 0;
+        for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
             try {
                 const res = await request(method, { options, body });
                 return res;
             } catch (e) {
                 err = e;
+                if (!e.message.includes("502 Bad Gateway")) break;
                 await timeout(i);
+                waitTime += i;
                 continue;
             }
         }
