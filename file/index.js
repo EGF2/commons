@@ -12,6 +12,7 @@ function newClient(url) {
         getImageUrl: file_id => new Promise((resolve, reject) => {
             client.get(`/v1/internal/file/file_url?file_id=${file_id.fileId}`, (err, req, res, obj) => {
                 if (err) {
+                    console.log("ERROR AWS PZD TOVRISHI", err)
                     return reject(err);
                 }
                 resolve(obj);
