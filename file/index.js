@@ -7,26 +7,49 @@ function newClient(url) {
         url,
         version: "*"
     });
+    const startTimeout = 5;
+    const deltaInterval = 20;
+    const maxTimeout = 3500;
+
+    const request = (method, url) => {
+        return new Promise((resolve, reject) => {
+            const callback = (err, req, res, obj) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(obj);
+            };
+            if (method === "GET") client.get(url, callback);
+        });
+    };
+
+    const timeout = async ms => {
+        return new Promise(res => setTimeout(res, ms));
+    };
+
+    const handle = async (method, url) => {
+        let err;
+        let waitTime = 0;
+        for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
+            try {
+                const res = await request(method, url);
+                return res;
+            } catch (e) {
+                err = e;
+                if (!e.message.includes("502 Bad Gateway")) break;
+                await timeout(i);
+                waitTime += i;
+                continue;
+            }
+        }
+        console.log("ERRRRRR VCE ZPD FILE", err);
+        throw new Error(err);
+    };
 
     return {
-        getImageUrl: file_id => new Promise((resolve, reject) => {
-            client.get(`/v1/internal/file/file_url?file_id=${file_id.fileId}`, (err, req, res, obj) => {
-                if (err) {
-                    console.log("ERROR AWS PZD TOVRISHI", err)
-                    return reject(err);
-                }
-                resolve(obj);
-            });
-        }),
+        getImageUrl: file_id => handle("GET", `/v1/internal/file/file_url?file_id=${file_id.fileId}`),
 
-        internalUploadFile: params => new Promise((resolve, reject) => {
-            client.get(`/v1/internal/file/upload_file?mime_type=${params.params.mime_type}&title=${params.params.title}&kind=${params.params.kind}`, (err, req, res, obj) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(obj);
-            });
-        })
+        internalUploadFile: params => handle("GET", `/v1/internal/file/upload_file?mime_type=${params.params.mime_type}&title=${params.params.title}&kind=${params.params.kind}`)
     };
 }
 

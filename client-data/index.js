@@ -59,6 +59,7 @@ function newClient(url) {
                 if (!e.message.includes("502 Bad Gateway")) break;
                 await timeout(i);
                 waitTime += i;
+                console.log("NEXT")
                 continue;
             }
         }
