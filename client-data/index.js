@@ -7,8 +7,12 @@ function newClient(url) {
         url,
         version: "*"
     });
+    // Time in ms
+    const startTimeout = 5;
+    const deltaInterval = 20;
+    const maxTimeout = 2000;
 
-    let handle = (method, path, body, author, suppressEvent) =>
+    let request = (method, params) =>
         new Promise((resolve, reject) => {
             let callback = (err, req, res, obj) => {
                 if (err) {
@@ -16,29 +20,47 @@ function newClient(url) {
                 }
                 resolve(obj);
             };
-            let options = { path };
-            if (author) {
-                options.headers = {
-                    "Author": author
-                };
-            }
-            if (suppressEvent) {
-                options.headers = {
-                    suppressEvent: true
-                }
-            }
             if (method === "GET") {
-                client.get(options, callback);
+                client.get(params.options, callback);
             } else if (method === "POST") {
-                client.post(options, body, callback);
+                client.post(params.options, params.body, callback);
             } else if (method === "PUT") {
-                client.put(options, body, callback);
+                client.put(params.options, params.body, callback);
             } else if (method === "PATCH") {
-                client.patch(options, body, callback);
+                client.patch(params.options, params.body, callback);
             } else if (method === "DELETE") {
-                client.del(options, callback);
+                client.del(params.options, callback);
             }
         });
+    const timeout = async ms => {
+        return new Promise(res => setTimeout(res, ms));
+    };
+
+    const handle = async (method, path, body, author, suppressEvent) => {
+        let options = { path };
+        if (author) {
+            options.headers = {
+                "Author": author
+            };
+        }
+        if (suppressEvent) {
+            options.headers = {
+                suppressEvent: true
+            }
+        }
+        let err;
+        for (let i = startTimeout; i <= maxTimeout; i += deltaInterval) {
+            try {
+                const res = await request(method, { options, body });
+                return res;
+            } catch (e) {
+                err = e;
+                await timeout(i);
+                continue;
+            }
+        }
+        throw new Error(err);
+    };
 
     // keep graph config
     let graphConfig;
