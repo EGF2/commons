@@ -59,11 +59,9 @@ function newClient(url) {
                 if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
-                console.log("NEXT")
                 continue;
             }
         }
-        console.log("ERRRRRR VCE ZPD RACHODIMSYA", err.message)
         throw new Error(err);
     };
 

@@ -42,7 +42,6 @@ function newClient(url) {
                 continue;
             }
         }
-        console.log("ERRRRRR VCE ZPD FILE", err);
         throw new Error(err);
     };
 
