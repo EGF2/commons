@@ -56,14 +56,14 @@ function newClient(url) {
                 return res;
             } catch (e) {
                 err = e;
-                if (!e.message.includes("502 Bad Gateway")) break;
+                if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
                 console.log("NEXT")
                 continue;
             }
         }
-        console.log("ERRRRRR VCE ZPD RACHODIMSYA", err)
+        console.log("ERRRRRR VCE ZPD RACHODIMSYA", err.message)
         throw new Error(err);
     };
 

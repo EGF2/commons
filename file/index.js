@@ -36,7 +36,7 @@ function newClient(url) {
                 return res;
             } catch (e) {
                 err = e;
-                if (!e.message.includes("502 Bad Gateway")) break;
+                if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
                 continue;
