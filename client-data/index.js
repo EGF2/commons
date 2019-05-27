@@ -62,7 +62,7 @@ function newClient(url) {
                 continue;
             }
         }
-        throw new Error(err);
+        throw err;
     };
 
     // keep graph config
