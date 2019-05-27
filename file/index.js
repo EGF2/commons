@@ -30,18 +30,22 @@ function newClient(url) {
     const handle = async (method, url) => {
         let err;
         let waitTime = 0;
+        const objErr = {};
         for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
             try {
                 const res = await request(method, url);
+                objErr.err && console.log("fileErr", JSON.stringify(objErr));
                 return res;
             } catch (e) {
                 err = e;
+                if(!objErr.err) objErr.err = {err: e, message: e.message, code: e.code}
                 if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
                 continue;
             }
         }
+        console.log("fileErr", JSON.stringify(objErr));
         throw new Error(err);
     };
 
