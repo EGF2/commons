@@ -12,8 +12,8 @@ function newClient(url) {
     const deltaInterval = 20;
     const maxTimeout = 3500;
 
-    let request = (method, params) =>
-        new Promise((resolve, reject) => {
+    let request = (method, params) => {
+        return new Promise((resolve, reject) => {
             let callback = (err, req, res, obj) => {
                 if (err) {
                     return reject(err);
@@ -32,6 +32,8 @@ function newClient(url) {
                 client.del(params.options, callback);
             }
         });
+    };
+
     const timeout = async ms => {
         return new Promise(res => setTimeout(res, ms));
     };
@@ -50,18 +52,21 @@ function newClient(url) {
         }
         let err;
         let waitTime = 0;
+        const objErr = {};
         for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
             try {
                 const res = await request(method, { options, body });
                 return res;
             } catch (e) {
                 err = e;
+                if(!objErr.err) objErr.err = {err: e, message: e.message, code: e.code}
                 if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
                 continue;
             }
         }
+        console.log("client-data err", JSON.stringify(objErr));
         throw err;
     };
 

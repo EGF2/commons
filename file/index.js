@@ -34,7 +34,6 @@ function newClient(url) {
         for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
             try {
                 const res = await request(method, url);
-                objErr.err && console.log("fileErr", JSON.stringify(objErr));
                 return res;
             } catch (e) {
                 err = e;
