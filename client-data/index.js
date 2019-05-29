@@ -303,14 +303,8 @@ function newClient(url) {
                             }
                             let promise;
                             if (field in obj && field in objCfg.fields) {
-                                if (!obj[field]) continue;
-                                try {
-                                    promise = this.getObject(obj[field], options);
-
-                                } catch (e) {
-                                    console.log(e, obj[field], field, obj);
-                                    throw e
-                                }
+                                if (!obj[field]) return;
+                                promise = this.getObject(obj[field], options);
                             } else if (objCfg.edges && field in objCfg.edges) {
                                 promise = this.getEdges(obj.id, field, options);
                             }
