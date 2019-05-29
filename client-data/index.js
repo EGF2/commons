@@ -59,7 +59,7 @@ function newClient(url) {
                 return res;
             } catch (e) {
                 err = e;
-                if(!objErr.err) objErr.err = {err: e, message: e.message, code: e.code}
+                if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
                 if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
@@ -303,6 +303,7 @@ function newClient(url) {
                             }
                             let promise;
                             if (field in obj && field in objCfg.fields) {
+                                if (!obj[field]) continue;
                                 promise = this.getObject(obj[field], options);
                             } else if (objCfg.edges && field in objCfg.edges) {
                                 promise = this.getEdges(obj.id, field, options);
