@@ -49,7 +49,7 @@ function newClient(url) {
     };
 
     return {
-        getImageUrl: file_id => handle("GET", `/v1/internal/file/file_url?file_id=${file_id.fileId}`),
+        getImageUrl: file_id => handle("GET", `/v1/internal/file/file_url?file_id=${file_id.fileId || file_id.id || file_id}`),
 
         internalUploadFile: params => handle("GET", `/v1/internal/file/upload_file?mime_type=${params.params.mime_type}&title=${params.params.title}&kind=${params.params.kind}`)
     };
