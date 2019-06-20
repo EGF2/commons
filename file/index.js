@@ -44,7 +44,6 @@ function newClient(url) {
                 continue;
             }
         }
-        console.log("fileErr", JSON.stringify(objErr));
         throw new Error(err);
     };
 

@@ -66,7 +66,6 @@ function newClient(url) {
                 continue;
             }
         }
-        console.log("client-data err", JSON.stringify(objErr));
         throw err;
     };
 
