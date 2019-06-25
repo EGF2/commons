@@ -217,6 +217,8 @@ class Searcher {
                 body: request
             });
         }).then(body => {
+            console.log("body >>>>>>>>>>", body)            
+
             // Fix for npi search
             if (options.object === "laboratory_reqs" || options.object === "distributor_reqs") {
                 let res = {
