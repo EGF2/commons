@@ -194,7 +194,9 @@ class Searcher {
     search(options) {
         let query = Promise.resolve();
         return query.then(searchAfter => {
+            console.log("options >>>>>>>>>>", options)
             let request = this.createRequest(options);
+            console.log("request >>>>>>>>>>", request)            
             // Fix default sort by id for npi search
             if (options.object === "log_line") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
