@@ -184,7 +184,10 @@ class Searcher {
         } else {
             query.query.bool = filters.bool;
         }
-        query.query.bool.filter = filterRange;
+        if (query.query.bool) query.query.bool.filter = filterRange;
+        else {
+            query.query.bool = { filter: [] };
+        }
         return query;
     }
 
