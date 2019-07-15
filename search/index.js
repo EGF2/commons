@@ -2,8 +2,6 @@
 
 const elasticsearch = require("elasticsearch");
 
-let dateRegExp = /^\d{4}-\d{2}-\d{2}$/;
-
 /* eslint camelcase: 0 */
 
 class Searcher {
@@ -47,8 +45,6 @@ class Searcher {
     }
     createRequest(options) {
         let filters = [];
-        let sort_by_val;
-        let sort_by_field;
         if (options.sort_by) {
             sort_by_val = options.sort_by.split("(")[1].split(")")[0];
             sort_by_field = options.sort_by.split("(")[0];
@@ -72,68 +68,9 @@ class Searcher {
         if (Object.keys(range).length) {
             filterRange.push({ range: range });
         }
-        let query;
-
-        if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.group_by) {
-            query = {
-                query: {},
-                aggs: {}
-            };
-
-            query.aggs[options.object] = {
-                terms: {
-                    field: options.group_by,
-                    size: 5000
-                }
-            };
-            if (options.sort_by && sort_by_val && sort_by_field) {
-                if (sort_by_field === "result") {
-                    query.aggs[options.object].terms.order = { _count: sort_by_val }
-                }
-                if (sort_by_field === "object_name") {
-                    query.aggs[options.object].terms.order = { _key: sort_by_val }
-                }
-            }
-        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "sum" && !options.group_by) {
-            query = {
-                query: {},
-                aggs: {}
-            };
-
-            query.aggs[options.object] = {
-                sum: {
-                    field: "tat"
-                }
-            };
-        } else if ((options.object === "laboratory_reqs" || options.object === "distributor_reqs") && options.func === "average" && !options.group_by) {
-            query = {
-                query: {},
-                aggs: {}
-            };
-
-            query.aggs[options.object] = {
-                avg: {
-                    field: "tat"
-                }
-            };
-        } else {
-            query = { query: {} };
-        }
-
-        let isEmail = /^(?:[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&amp;'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/;
+        let query = { query: {} };
 
         if (options.fields && options.q) {
-            let reg = /[^\w\s\.]/gi;
-            let checkNumberEmail = false;
-            if (isEmail.test(options.q)) {
-                let emailArr = options.q.split(".");
-                let lastSymbol = emailArr[emailArr.length - 2];
-                checkNumberEmail = Number.isInteger(parseInt(lastSymbol[lastSymbol.length - 1]));
-            }
-
-            if (checkNumberEmail) {
-                reg = /[^\w\s]/gi;
-            }
             query.query.bool = query.query.bool || {};
             options.q = options.q.replace("AND", "and");
             options.q = options.q.replace(/  +/g, ' ');
@@ -216,16 +153,15 @@ class Searcher {
             });
         }).then(body => {
             // Fix for npi search
-            if (options.object === "laboratory_reqs" || options.object === "distributor_reqs") {
-                let res = {
-                    results: body.hits.hits.map(doc => doc._source),
-                    count: body.hits.total,
-                    aggregations: body.aggregations ? body.aggregations : ""
-
-                };
-                return res;
-            }
-            const returnObject = ["npi_location", "npi_entity", "log_line", "lab_test_position", "zip_code"];
+            const returnObject = [
+                "npi_location", 
+                "npi_entity", 
+                "log_line", 
+                "lab_test_position_v1", 
+                "lab_test_position_v2", 
+                "lab_test_position_test2", 
+                "lab_test_position_test1", 
+                "zip_code"];
             if (returnObject.includes(options.object)) {
                 let res = {
                     results: body.hits.hits.map(doc => doc._source),
