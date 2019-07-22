@@ -8,7 +8,7 @@
     "request": "^2.78.0",
     "restify": "^4.1.1",
     "rethinkdbdash": "^2.3.23",
-    "sorted-set": "^0.3.0",
+    "sorted-set": "^0.2.2",
     "yargs": "^6.3.0"
   },
   "devDependencies": {
