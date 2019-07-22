@@ -38,18 +38,13 @@ function newClient(url) {
         return new Promise(res => setTimeout(res, ms));
     };
 
-    const handle = async (method, path, body, author, suppressEvent) => {
-        let options = { path };
-        if (author) {
-            options.headers = {
-                "Author": author
-            };
-        }
-        if (suppressEvent) {
-            options.headers = {
-                suppressEvent: true
-            }
-        }
+    const handle = async (method, path, body, author, notProcess) => {
+        let options = {
+            path,
+            headers: {}
+        };
+        if (author) options.headers.Author = author;
+        if (notProcess) options.headers.notProcess = notProcess;
         let err;
         let waitTime = 0;
         const objErr = {};
@@ -153,23 +148,27 @@ function newClient(url) {
 
         /**
          * Create object
+         * @notProcess - name servces, for which do not need to handle this event 
          */
-        createObject: (object, author, suppressEvent) => handle("POST", "/v1/client-data/graph", object, author, suppressEvent),
+        createObject: (object, author, notProcess) => handle("POST", "/v1/client-data/graph", object, author, notProcess),
 
         /**
          * Update object
+         *  @notProcess - name servces, for which do not need to handle this event 
          */
-        updateObject: (id, delta, author, suppressEvent) => handle("PATCH", `/v1/client-data/graph/${id}`, delta, author, suppressEvent),
+        updateObject: (id, delta, author, notProcess) => handle("PATCH", `/v1/client-data/graph/${id}`, delta, author, notProcess),
 
         /**
          * Replace object
+         * @notProcess - name servces, for which do not need to handle this event 
          */
-        replaceObject: (id, object, author, suppressEvent) => handle("PUT", `/v1/client-data/graph/${id}`, object, author, suppressEvent),
+        replaceObject: (id, object, author, notProcess) => handle("PUT", `/v1/client-data/graph/${id}`, object, author, notProcess),
 
         /**
          * Delete object
+         * @notProcess - name servces, for which do not need to handle this event 
          */
-        deleteObject: (id, author, suppressEvent) => handle("DELETE", `/v1/client-data/graph/${id}`, undefined, author, suppressEvent),
+        deleteObject: (id, author, notProcess) => handle("DELETE", `/v1/client-data/graph/${id}`, undefined, author, notProcess),
 
         /**
          * Get edge
@@ -204,13 +203,15 @@ function newClient(url) {
 
         /**
          * Create edge
+         * @notProcess - name servces, for which do not need to handle this event 
          */
-        createEdge: (srcID, edgeName, dstID, author, suppressEvent) => handle("POST", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, suppressEvent),
+        createEdge: (srcID, edgeName, dstID, author, notProcess) => handle("POST", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
 
         /**
          * Delete edge
+         * @notProcess - name servces, for which do not need to handle this event 
          */
-        deleteEdge: (srcID, edgeName, dstID, author, suppressEvent) => handle("DELETE", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, suppressEvent),
+        deleteEdge: (srcID, edgeName, dstID, author, notProcess) => handle("DELETE", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
 
         /**
          * Create audit
