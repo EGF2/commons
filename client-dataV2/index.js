@@ -2,8 +2,7 @@
 
 const restify = require("restify");
 
-function newClient(url) {module.exports = newClient;
-
+function newClient(url) {
     let client = restify.createJsonClient({
         url,
         version: "*"
@@ -39,13 +38,12 @@ function newClient(url) {module.exports = newClient;
         return new Promise(res => setTimeout(res, ms));
     };
 
-    const handle = async (method, path, body, author, notProcess) => {
+    const handle = async (method, path, body, params) => {
         let options = {
             path,
             headers: {}
         };
-        if (author) options.headers.Author = author;
-        if (notProcess) options.headers.notProcess = notProcess;
+        if (params && typeof params === "object") options.headers = { ...params };
         let err;
         let waitTime = 0;
         const objErr = {};
@@ -128,8 +126,8 @@ function newClient(url) {module.exports = newClient;
         /**
          * Get object
          */
-        getObject: function (id, options, author) {
-            return handle("GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
+        getObject: function (id, options, params) {
+            return handle("GET", `/v2/client-data/graph/${id}`, "", params).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -137,12 +135,12 @@ function newClient(url) {module.exports = newClient;
         /**
          * Get objects
          */
-        getObjects: function (ids, options, author) {
+        getObjects: function (ids, options, params) {
             if (typeof ids.slice(-1)[0] === "object") {
                 options = ids.slice(-1)[0];
                 ids = ids.slice(0, -1);
             }
-            return handle("GET", `/v2/client-data/graph/${ids.join(",")}`, "", author).then(result =>
+            return handle("GET", `/v2/client-data/graph/${ids.join(",")}`, "", params).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -150,22 +148,22 @@ function newClient(url) {module.exports = newClient;
         /**
          * Create object
          */
-        createObject: (object, author, notProcess) => handle("POST", "/v2/client-data/graph", object, author, notProcess),
+        createObject: (object, params) => handle("POST", "/v2/client-data/graph", object, params),
 
         /**
          * Update object
          */
-        updateObject: (id, delta, author, notProcess) => handle("PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
+        updateObject: (id, delta, params) => handle("PATCH", `/v2/client-data/graph/${id}`, delta, params),
 
         /**
          * Replace object
          */
-        replaceObject: (id, object, author, notProcess) => handle("PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
+        replaceObject: (id, object, params) => handle("PUT", `/v2/client-data/graph/${id}`, object, params),
 
         /**
          * Delete object
          */
-        deleteObject: (id, author, notProcess) => handle("DELETE", `/v2/client-data/graph/${id}`, undefined, author, notProcess),
+        deleteObject: (id, params) => handle("DELETE", `/v2/client-data/graph/${id}`, undefined, params),
 
         /**
          * Get edge
@@ -201,12 +199,12 @@ function newClient(url) {module.exports = newClient;
         /**
          * Create edge
          */
-        createEdge: (srcID, edgeName, dstID, author, notProcess) => handle("POST", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
+        createEdge: (srcID, edgeName, dstID, params) => handle("POST", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, params),
 
         /**
          * Delete edge
          */
-        deleteEdge: (srcID, edgeName, dstID, author, notProcess) => handle("DELETE", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
+        deleteEdge: (srcID, edgeName, dstID, params) => handle("DELETE", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, params),
 
         /**
          * Create audit
