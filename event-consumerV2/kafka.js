@@ -37,7 +37,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     if (offset > -1) {
         offset++;
     }
-    consumer.subscribe(config.kafka.topic, 0, { offset }, handler(eventHandler, errorHandler, consumer));
+    consumer.subscribe(config.kafka.topicV2, 0, { offset }, handler(eventHandler, errorHandler, consumer));
 };
 
 module.exports = newConsumer;
