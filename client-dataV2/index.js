@@ -2,12 +2,17 @@
 
 const restify = require("restify");
 
-function newClient(url) {module.exports = newClient;
+function newClient(url, mode) {
 
     let client = restify.createJsonClient({
         url,
         version: "*"
     });
+
+    let ignoreErrors;
+
+    if (mode && mode.ignoreCD) ignoreErrors = mode.ignoreCD;
+
     // Time in ms
     const startTimeout = 5;
     const deltaInterval = 20;
@@ -50,13 +55,19 @@ function newClient(url) {module.exports = newClient;
         let waitTime = 0;
         const objErr = {};
         for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
+            let res;
             try {
-                const res = await request(method, { options, body });
+                res = await request(method, { options, body });
                 return res;
             } catch (e) {
                 err = e;
                 if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
                 if (!e.message.includes("Gateway")) break;
+                if(ignoreErrors && method !== "GET") {
+                    if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return res;
+                    if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return res;
+                }
+
                 await timeout(i);
                 waitTime += i;
                 continue;
