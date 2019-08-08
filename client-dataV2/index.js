@@ -61,13 +61,12 @@ function newClient(url, mode) {
                 return res;
             } catch (e) {
                 err = e;
-                if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
-                if (!e.message.includes("Gateway")) break;
-                if(ignoreErrors && method !== "GET") {
-                    if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return res;
-                    if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return res;
+                if (!objErr.err) {objErr.err = {err: e, message: e.message, code: e.code}}
+                if (ignoreErrors && method !== "GET") {
+                    if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) {return {message: new Date().toISOString()};}
+                    if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) {return {message: new Date().toISOString()};}
                 }
-
+                if (!e.message.includes("Gateway")) {break;}
                 await timeout(i);
                 waitTime += i;
                 continue;
