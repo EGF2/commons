@@ -8,11 +8,11 @@
  * @param errorHandler - error handler
  * @return Promise with event consumer
  */
-function newConsumer(config, eventHandler, errorHandler) {
+function newConsumer(config, eventHandler, errorHandler, options = {}) {
     if (config.queue === "rethinkdb") {
         return require("./rethinkdb")(config, eventHandler, errorHandler);
     } else if (config.queue === "kafka") {
-        return require("./kafka")(config, eventHandler, errorHandler);
+        return require("./kafka")(config, eventHandler, errorHandler, options);
     }
     throw new Error("Unknown consumer type");
 }
