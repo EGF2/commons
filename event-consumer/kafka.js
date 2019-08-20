@@ -6,13 +6,16 @@ const {Kafka} = require("kafkajs");
  * @param errorHandler - error handler
  */
 
-const newConsumer = async (config, eventHandler, errorHandler) => {
+const newConsumer = async (config, eventHandler, errorHandler, options = {}) => {
     const kafka = new Kafka({
         clientId: config.kafka["client-id"],
         brokers: config.kafka.hosts
     });
 
-    const consumer = kafka.consumer({groupId: config["consumer-group"]});
+    const {groupId: optGroupId} = options;
+    const groupId = optGroupId || config["consumer-group"];
+
+    const consumer = kafka.consumer({groupId});
     await consumer.connect();
     await consumer.subscribe({topic: config.kafka.topic, fromBeginning: false});
 
