@@ -27,9 +27,10 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         groupId: `${config["consumer-group"]}V2`,
         clientId: config.kafka["client-id"],
         logger: {
-            logFunction: (q, w, e, error) => {
-              if (error.includes("NoKafkaConnectionError")) errorHandler();
-            }
+            logFunction: (q, w, e, error, t, y, u, i, o = "", p = "") => {
+                console.log(q, w, e, error, t, y, u, i, o, p);
+                if (error.includes("NoKafkaConnectionError")) errorHandler();
+              }
           }
     });
 
