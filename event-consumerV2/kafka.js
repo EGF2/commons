@@ -25,7 +25,12 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     const consumer = new kafka.SimpleConsumer({
         connectionString: config.kafka.hosts.join(","),
         groupId: `${config["consumer-group"]}V2`,
-        clientId: config.kafka["client-id"]
+        clientId: config.kafka["client-id"],
+        logger: {
+            logFunction: (q, w, e, error) => {
+              if (error.includes("NoKafkaConnectionError")) errorHandler();
+            }
+          }
     });
 
     await consumer.init();
