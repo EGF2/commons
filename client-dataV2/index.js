@@ -2,11 +2,17 @@
 
 const restify = require("restify");
 
-function newClient(url) {
+function newClient(url, mode) {
+
     let client = restify.createJsonClient({
         url,
         version: "*"
     });
+
+    let ignoreErrors;
+
+    if (mode && mode.ignoreCD) ignoreErrors = mode.ignoreCD;
+
     // Time in ms
     const startTimeout = 5;
     const deltaInterval = 20;
@@ -49,12 +55,17 @@ function newClient(url) {
         let waitTime = 0;
         const objErr = {};
         for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
+            let res;
             try {
-                const res = await request(method, { options, body });
+                res = await request(method, { options, body });
                 return res;
             } catch (e) {
                 err = e;
                 if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
+                if(ignoreErrors && method !== "GET") {
+                    if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return {message: new Date().toISOString()};
+                    if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return {message: new Date().toISOString()};
+                }
                 if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
@@ -78,7 +89,7 @@ function newClient(url) {
             if (graphConfig) {
                 return Promise.resolve(graphConfig);
             }
-            return handle("GET", "/v1/client-data/graph")
+            return handle("GET", "/v2/client-data/graph")
                 .then(result => {
                     graphConfig = result;
                     codeToObjectType = {};
@@ -128,7 +139,7 @@ function newClient(url) {
          * Get object
          */
         getObject: function (id, options, author) {
-            return handle("GET", `/v1/client-data/graph/${id}`, "", author).then(result =>
+            return handle("GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -141,40 +152,36 @@ function newClient(url) {
                 options = ids.slice(-1)[0];
                 ids = ids.slice(0, -1);
             }
-            return handle("GET", `/v1/client-data/graph/${ids.join(",")}`, "", author).then(result =>
+            return handle("GET", `/v2/client-data/graph/${ids.join(",")}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
 
         /**
          * Create object
-         * @notProcess - name servces, for which do not need to handle this event 
          */
-        createObject: (object, author, notProcess) => handle("POST", "/v1/client-data/graph", object, author, notProcess),
+        createObject: (object, author, notProcess) => handle("POST", "/v2/client-data/graph", object, author, notProcess),
 
         /**
          * Update object
-         *  @notProcess - name servces, for which do not need to handle this event 
          */
-        updateObject: (id, delta, author, notProcess) => handle("PATCH", `/v1/client-data/graph/${id}`, delta, author, notProcess),
+        updateObject: (id, delta, author, notProcess) => handle("PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
 
         /**
          * Replace object
-         * @notProcess - name servces, for which do not need to handle this event 
          */
-        replaceObject: (id, object, author, notProcess) => handle("PUT", `/v1/client-data/graph/${id}`, object, author, notProcess),
+        replaceObject: (id, object, author, notProcess) => handle("PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
 
         /**
          * Delete object
-         * @notProcess - name servces, for which do not need to handle this event 
          */
-        deleteObject: (id, author, notProcess) => handle("DELETE", `/v1/client-data/graph/${id}`, undefined, author, notProcess),
+        deleteObject: (id, author, notProcess) => handle("DELETE", `/v2/client-data/graph/${id}`, undefined, author, notProcess),
 
         /**
          * Get edge
          */
         getEdge: function (srcID, edgeName, dstID, options) {
-            return handle("GET", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
+            return handle("GET", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -183,7 +190,7 @@ function newClient(url) {
          * Get edges
          */
         getEdges: function (srcID, edgeName, options) {
-            let url = `/v1/client-data/graph/${srcID}/${edgeName}`;
+            let url = `/v2/client-data/graph/${srcID}/${edgeName}`;
             if (options) {
                 let params = [];
                 if (options.after !== undefined) {
@@ -203,20 +210,18 @@ function newClient(url) {
 
         /**
          * Create edge
-         * @notProcess - name servces, for which do not need to handle this event 
          */
-        createEdge: (srcID, edgeName, dstID, author, notProcess) => handle("POST", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
+        createEdge: (srcID, edgeName, dstID, author, notProcess) => handle("POST", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
 
         /**
          * Delete edge
-         * @notProcess - name servces, for which do not need to handle this event 
          */
-        deleteEdge: (srcID, edgeName, dstID, author, notProcess) => handle("DELETE", `/v1/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
+        deleteEdge: (srcID, edgeName, dstID, author, notProcess) => handle("DELETE", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
 
         /**
          * Create audit
          */
-        createAudit: (auditLog, author) => handle("POST", "/v1/client-data/audit", auditLog, author),
+        createAudit: (auditLog, author) => handle("POST", "/v2/client-data/audit", auditLog, author),
 
         /**
          * Handle all pages
