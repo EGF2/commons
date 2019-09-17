@@ -49,6 +49,7 @@ function newClient(url, mode) {
             path,
             headers: {}
         };
+        if (mode) options.headers.service = mode;
         if (author) options.headers.Author = author;
         if (notProcess) options.headers.notProcess = notProcess;
         let err;
