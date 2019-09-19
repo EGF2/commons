@@ -157,7 +157,6 @@ class Searcher {
                 "npi_location",
                 "npi_entity",
                 "log_line",
-                "lab_test_position_v1",
                 "lab_test_position_v2",
                 "lab_test_position_test2",
                 "lab_test_position_test1",
