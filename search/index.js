@@ -145,6 +145,10 @@ class Searcher {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
                 request.sort.push({ npi: "asc" });
             }
+            if (options.object === "waystar_payer") {
+                request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
+                request.sort.push({ name: "asc" });
+            }
 
             return this.elastic.search({
                 index: options.object,
