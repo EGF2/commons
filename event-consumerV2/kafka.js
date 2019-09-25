@@ -43,6 +43,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     if (offset > -1) {
         offset++;
     }
+    offset = 3835111
     consumer.subscribe(config.kafka.topicV2, 0, { offset }, handler(eventHandler, errorHandler, consumer));
 };
 
