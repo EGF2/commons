@@ -6,7 +6,7 @@
     "elasticsearch": "^12.0.1",
     "no-kafka": "^3.0.1",
     "request": "^2.78.0",
-    "restify": "^4.1.1",
+    "restify": "^8.4.0",
     "rethinkdbdash": "^2.3.23",
     "sorted-set": "^0.2.2",
     "yargs": "^6.3.0"
