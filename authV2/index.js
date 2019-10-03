@@ -1,6 +1,7 @@
 "use strict";
 
 const restify = require("restify-clients");
+const errors = require("restify-errors")
 
 // Authorization header
 const AUTH = "authorization";
@@ -22,7 +23,7 @@ function _getToken(req) {
     }
 
     // throw unauthorization exception
-    throw new restify.UnauthorizedError("Bearer token doesn't exist");
+    throw new errors.UnauthorizedError("Bearer token doesn't exist");
 }
 
 class Client {
@@ -60,7 +61,7 @@ class Client {
 
             client.get(`/v2/internal/auth/session?token=${token}`, (err, req, res, obj) => {
                 if (obj.deleted_at) {
-                    return reject(new restify.UnauthorizedError("Bearer token doesn't exist"));
+                    return reject(new errors.UnauthorizedError("Bearer token doesn't exist"));
                 }
                 if (err) {
                     return reject(err);
