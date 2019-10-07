@@ -10,7 +10,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     const topic = config.kafka.topicV2;
     const options = {
         kafkaHost: config.kafka.hosts.join(","),
-        groupId: config.groupId,
+        groupId: config["consumer-groupV2"],
         protocol: ["roundrobin"],
         encoding: "utf8",
         onRebalance: (isAlreadyMember, callback) => {
