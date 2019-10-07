@@ -6,8 +6,7 @@ const Transform = require("stream").Transform;
  * @param errorHandler - error handler
  */
 
-const newConsumer = async (config, eventHandler, errorHandler, Logger) => {
-    const Log = new Logger(__filename);
+const newConsumer = async (config, eventHandler, errorHandler) => {
     const topic = config.kafka.topicV2;
     const options = {
         kafkaHost: config.kafka.hosts.join(","),
@@ -44,12 +43,12 @@ const newConsumer = async (config, eventHandler, errorHandler, Logger) => {
     });
 
     consumerGroup.on("error", e => {
-        Log.error("Error kafka", e);
+        console.log("Error kafka", e);
         errorHandler(e);
     });
 
     consumerGroup.on("connect", () => {
-        Log.info("Kafka connect", {host: options.kafkaHost, groupId: options.groupId, topic});
+        console.log("Kafka connect", JSON.stringify({host: options.kafkaHost, groupId: options.groupId, topic}));
     });
 
     consumerGroup.pipe(messageTransform).pipe(resultProducer);
