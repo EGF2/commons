@@ -109,7 +109,7 @@ class Searcher {
                 query.sort.push({ [sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc" });
             });
         }
-        query.sort.push({ id: "asc" });
+        if (!options.notAddSort) query.sort.push({ id: "asc" });
         if (query.query.bool && query.query.bool.must) {
             if (filters.bool.must) {
                 filters.bool.must.push(query.query.bool.must);
