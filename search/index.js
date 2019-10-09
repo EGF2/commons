@@ -147,7 +147,7 @@ class Searcher {
             }
             if (options.object === "waystar_payer") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
-                request.sort.push({ name: "asc" });
+                request.sort.push({ name_sort: "asc" });
             }
 
             return this.elastic.search({
