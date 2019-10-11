@@ -34,7 +34,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         decodeStrings: true,
         async transform(message, encoding, callback) {
             try {
-                await eventHandler(JSON.parce(message.value));
+                await eventHandler(JSON.parse(message.value));
             } catch (e) {
                 errorHandler(e);
             }
