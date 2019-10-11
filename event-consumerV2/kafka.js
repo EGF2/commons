@@ -1,10 +1,14 @@
 const kafka = require("kafka-node");
 const Transform = require("stream").Transform;
+const Logging = require("../Logging");
+
 /**
  * @param config - kafka config
  * @param eventHandler - event handler
  * @param errorHandler - error handler
  */
+
+const Log = new Logging(__filename);
 
 const newConsumer = async (config, eventHandler, errorHandler) => {
     const topic = config.kafka.topicV2;
@@ -24,7 +28,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     options,
     topic
   );
-    const resultProducer = new kafka.ProducerStream();
+
     const messageTransform = new Transform({
         objectMode: true,
         decodeStrings: true,
@@ -43,15 +47,15 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     });
 
     consumerGroup.on("error", e => {
-        console.log("Error kafka", e);
+        Log.error("Error kafka", e);
         errorHandler(e);
     });
 
     consumerGroup.on("connect", () => {
-        console.log("Kafka connect", JSON.stringify({host: options.kafkaHost, groupId: options.groupId, topic}));
+        Log.info("Kafka connect", {host: options.kafkaHost, groupId: options.groupId, topic});
     });
 
-    consumerGroup.pipe(messageTransform).pipe(resultProducer);
+    consumerGroup.pipe(messageTransform);
 };
 
 module.exports = newConsumer;
