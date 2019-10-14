@@ -24,7 +24,7 @@ const handler = (eventHandler, errorHandler, consumer) => async (messageSet, top
 const newConsumer = async (config, eventHandler, errorHandler) => {
     const consumer = new kafka.SimpleConsumer({
         connectionString: config.kafka.hosts.join(","),
-        groupId: `${config["consumer-group"]}V2`,
+        groupId: `${config["consumer-groupV2"]}`,
         clientId: config.kafka["client-id"],
         logger: {
             logFunction: (q, w, e, error, t, y, u, i, o = "", p = "") => {
