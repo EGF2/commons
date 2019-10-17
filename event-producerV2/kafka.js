@@ -13,7 +13,7 @@ const Log = new Logging(__filename);
 
 module.exports = config => {
     return async (event, distribution) => {
-        const client = new kafka.KafkaClient(config.kafka.hosts.join(","), config.kafka["client-id"]);
+        const client = new kafka.KafkaClient({kafkaHost: config.kafka.hosts.join(",")});
 
         const {partition, distributionFn} = distribution;
         const partitionerType = distributionFn ? 4 : 2;
