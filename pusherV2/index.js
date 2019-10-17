@@ -1,6 +1,6 @@
 "use strict";
 
-const restify = require("restify");
+const restify = require("restify-clients");
 
 function newClient(url) {
     let client = restify.createJsonClient({
