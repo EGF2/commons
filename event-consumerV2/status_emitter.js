@@ -10,7 +10,7 @@ const getId = () => {
     const addreses = [];
     Object.keys(ifaces).forEach(function(ifname) {
         ifaces[ifname].forEach(function(iface) {
-            if ("IPv4" !== iface.family || iface.internal !== false) return;
+            if (iface.family !== "IPv4" || iface.internal !== false) return;
             addreses.push(iface.address);
         });
     });
@@ -30,7 +30,7 @@ class StatusEmitter {
         };
 
         try {
-            const url = this.config.egf_monitoring;
+            const url = `${this.config.egf_api}/v2/monitoring/status`;
             await axios.post(url, message);
         } catch (e) {
             Log.error("Status emitter error", e, {}, true);
