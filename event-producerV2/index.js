@@ -1,13 +1,11 @@
 "use strict";
 
 /**
- * Create new consumer for events
- * @param config - contains name and consumer config. Example:
- *                 {name: "Consumer1", rethinkdb: {db: "eigengraph"}}
- * @param eventHandler - event handler
- * @param errorHandler - error handler
- * @return Promise with event consumer
+ * Create new events producer
+ * @param config - contains name and consumer config.
+ * @return event producer function
  */
+
 const producerTypes = {
     kafka: require("./kafka")
 };
