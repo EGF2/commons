@@ -29,11 +29,11 @@ class StatusEmitter {
             status,
         };
 
+        const url = `${this.config.monitoring}/v2/monitoring/status`;
         try {
-            const url = `${this.config.egf_api}/v2/monitoring/status`;
             await axios.post(url, message);
         } catch (e) {
-            Log.error("Status emitter error", e, {}, true);
+            Log.error("Status emitter error", e, {url, message}, true);
         }
     }
 }
