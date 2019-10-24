@@ -150,9 +150,12 @@ class Searcher {
                 request.sort.push({ name_sort: "asc" });
             }
 
+            const aliases = ["roles"];
+            const type = aliases.includes(options.object) ? null : options.object;
+
             return this.elastic.search({
                 index: options.object,
-                type: options.object,
+                type,
                 body: request
             });
         }).then(body => {
