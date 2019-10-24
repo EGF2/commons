@@ -138,6 +138,11 @@ function newClient(url, mode) {
             return this.getGraphConfig().then(() => codeToObjectType[id.slice(-2)]);
         },
 
+        /*
+         * Get aggregate
+        */
+        getAggregate: (id, aggregate, author) => handle("GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}`,null ,author),
+
         /**
          * Get object
          */
