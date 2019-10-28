@@ -145,7 +145,7 @@ function newClient(url, mode) {
         /*
          * Get aggregate
         */
-        getAggregate: (id, aggregate, author) => handle("GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}`,null ,author),
+        getAggregate: (id, aggregate, author, v) => handle("GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}&v${v}`,null ,author),
 
         /**
          * Get object type by ID
@@ -231,7 +231,6 @@ function newClient(url, mode) {
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
-        
 
         /**
          * Create edge
