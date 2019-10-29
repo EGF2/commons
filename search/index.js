@@ -161,7 +161,7 @@ class Searcher {
         }).then(body => {
             // Fix for npi search
             const returnObject = [
-                "event",
+                "event_v2",
                 "npi_location",
                 "npi_entity",
                 "log_line",
