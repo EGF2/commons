@@ -1,4 +1,6 @@
 const axios = require("axios");
+const uuid = require("uuid/v4");
+const salt = uuid();
 
 const getIPAddress = () => {
   const interfaces = require("os").networkInterfaces();
@@ -18,24 +20,15 @@ const getIPAddress = () => {
   return "0.0.0.0";
 };
 
-const pingMonitoring = (url, serviceName, status, port) => {
-  return new Promise(async (resolve, reject) => {
-    console.log(`${process.env.ECS_CONTAINER_METADATA_URI}/task`)
-    const resonce = await axios.get(process.env.ECS_CONTAINER_METADATA_URI);
-    console.log(resonce);
-    try {
-      const res = await axios({
-        method: "POST",
-        url,
-        data: {
-          service_type: serviceName,
-          service_ip: getIPAddress(),
-          status,
-        }
-      });
-      resolve(res)
-    } catch (e) {
-      reject(e)
+const pingMonitoring = (url, serviceName, status) => {
+  return axios({
+    method: "POST",
+    url,
+    data: {
+      service_type: serviceName,
+      service_ip: getIPAddress(),
+      status,
+      salt
     }
   });
 };
