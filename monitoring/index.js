@@ -20,7 +20,7 @@ const getIPAddress = () => {
 
 const pingMonitoring = (url, serviceName, status, port) => {
   return new Promise(async (resolve, reject) => {
-    console.log(process.env.ECS_CONTAINER_METADATA_URI)
+    console.log(`${process.env.ECS_CONTAINER_METADATA_URI}/task`)
     const resonce = await axios.get(process.env.ECS_CONTAINER_METADATA_URI);
     console.log(resonce);
     try {
