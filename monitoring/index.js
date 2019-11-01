@@ -1,4 +1,6 @@
 const axios = require("axios");
+const uuid = require("uuid/v4");
+const salt = uuid();
 
 const getIPAddress = () => {
   const interfaces = require("os").networkInterfaces();
@@ -26,6 +28,7 @@ const pingMonitoring = (url, serviceName, status) => {
       service_type: serviceName,
       service_ip: getIPAddress(),
       status,
+      salt
     }
   });
 };

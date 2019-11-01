@@ -63,11 +63,11 @@ function newClient(url, mode) {
             } catch (e) {
                 err = e;
                 if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
-                if(ignoreErrors) {
-                    if ((e.body && e.body.code === "ObjectDeleted") || e.message.includes("ObjectDeleted")) return {message: new Date().toISOString()};
-                    if ((e.body && e.body.code === "SourceWasDeleted") || e.message.includes("SourceWasDeleted")) return {message: new Date().toISOString()};
-                    if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return {message: new Date().toISOString()};
-                    if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return {message: new Date().toISOString()};
+                if (ignoreErrors) {
+                    if ((e.body && e.body.code === "ObjectDeleted") || e.message.includes("ObjectDeleted")) return { message: new Date().toISOString() };
+                    if ((e.body && e.body.code === "SourceWasDeleted") || e.message.includes("SourceWasDeleted")) return { message: new Date().toISOString() };
+                    if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return { message: new Date().toISOString() };
+                    if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return { message: new Date().toISOString() };
                 }
                 if (!e.message.includes("Gateway")) break;
                 await timeout(i);
@@ -78,8 +78,9 @@ function newClient(url, mode) {
         throw err;
     };
 
-    // keep graph config
+    // keep config
     let graphConfig;
+    let aggregatesConfig;
 
     // keep object code to object type map
     let codeToObjectType;
@@ -105,6 +106,16 @@ function newClient(url, mode) {
                 });
         },
 
+        getAggregatesConfig: function () {
+            if (aggregatesConfig) {
+                return Promise.resolve(aggregatesConfig);
+            }
+            return handle("GET", "/v2/client-data/aggregates")
+                .then(result => {
+                    aggregatesConfig = result;
+                    return aggregatesConfig;
+                });
+        },
         /**
          * Get edge config
          */
@@ -131,17 +142,17 @@ function newClient(url, mode) {
             });
         },
 
+        /*
+         * Get aggregate
+        */
+        getAggregate: (id, aggregate, author, v) => handle("GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}&v${v}`,null ,author),
+
         /**
          * Get object type by ID
          */
         getObjectType: function (id) {
             return this.getGraphConfig().then(() => codeToObjectType[id.slice(-2)]);
         },
-
-        /*
-         * Get aggregate
-        */
-        getAggregate: (id, aggregate, author) => handle("GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}`,null ,author),
 
         /**
          * Get object
@@ -193,6 +204,11 @@ function newClient(url, mode) {
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
+
+        /**
+         * Get all edges
+         */
+        getAllEdges: (srcID, edgeName, v) => handle("GET", `/v2/client-data/getAllEdges/${srcID}/${edgeName}?v=${v}`),
 
         /**
          * Get edges
