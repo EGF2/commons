@@ -111,7 +111,7 @@ class Searcher {
         }
         if (!options.notAddSort) query.sort.push({ id: "asc" });
         if (query.query.bool && query.query.bool.must) {
-            if (filters.bool.must) {
+            if (!Array.isArray(filters) && filters.bool.must) {
                 filters.bool.must.push(query.query.bool.must);
                 query.query.bool = filters.bool;
             } else {
