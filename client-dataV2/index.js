@@ -248,6 +248,11 @@ function newClient(url, mode) {
         createAudit: (auditLog, author) => handle("POST", "/v2/client-data/audit", auditLog, author),
 
         /**
+         * Check unique value
+         */
+        checkUnique: value => handle("GET", `/v2/client-data/check_unique?value=${value}`),
+
+        /**
          * Handle all pages
          * @param {function(last) Promise<page>} query - execute query to server
          * @param {function(page) Promise} handler - handle each page
