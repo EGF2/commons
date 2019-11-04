@@ -160,6 +160,7 @@ class Searcher {
 
             const aliases = ["roles"];
             const type = aliases.includes(options.object) ? null : options.object;
+            console.log("???>>>>>>>>>>>>>", request.query.bool.must);
 
             return this.elastic.search({
                 index: options.object,
