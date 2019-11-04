@@ -125,6 +125,10 @@ class Searcher {
         else {
             query.query.bool = { filter: [] };
         }
+
+        if (query.query.bool && query.query.bool.must) {
+            query.query.bool.must = query.query.bool.must.filter(item => Object.keys(item).length);
+        }
         return query;
     }
 
