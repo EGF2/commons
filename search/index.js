@@ -127,8 +127,10 @@ class Searcher {
         }
 
         if (query.query.bool && query.query.bool.must) {
+            console.log("fix search by query")
             query.query.bool.must = query.query.bool.must.filter(item => Object.keys(item).length);
         }
+        console.log(query.query.bool.must)
         return query;
     }
 
