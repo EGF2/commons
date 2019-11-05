@@ -16,6 +16,23 @@ function newClient(url) {
                 }
                 resolve(obj);
             });
+        }),
+
+        /**
+         * @temaplateName - name template sms,
+         * @to - to number
+         *
+         * @reqReport - id reqReport,
+         * or
+         * @code - number code
+         * */
+        sendSms: params => new Promise((resolve, reject) => {
+            client.post("/v2/internal/send_sms", params, (err, req, res, obj) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(obj);
+            })
         })
     };
 }
