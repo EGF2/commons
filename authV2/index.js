@@ -73,6 +73,18 @@ class Client {
             });
         });
     }
+
+    register(params) {
+        let client = this.client;
+        return new Promise((resolve, reject) => {
+            client.post("/v2/internal/auth/register", params, (err, req, res, obj) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(obj);
+            });
+        });
+    }
 }
 module.exports.Client = Client;
 
@@ -83,7 +95,7 @@ module.exports.Client = Client;
   */
 function handler(url, allowPublicAccess) {
     let client = new Client(url);
-    return function (req, res, next) {
+    return function(req, res, next) {
         client.checkToken(req).then(session => {
             req.session = session; // set session to request
             if (session.user) {
