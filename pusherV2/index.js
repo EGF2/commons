@@ -27,7 +27,7 @@ function newClient(url) {
          * @code - number code
          * */
         sendSms: params => new Promise((resolve, reject) => {
-            client.post("/v2/internal/send_sms", params, (err, req, res, obj) => {
+            client.post("/v2/internal/pusher/send_sms", params, (err, req, res, obj) => {
                 if (err) {
                     return reject(err);
                 }
