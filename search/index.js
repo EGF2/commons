@@ -44,10 +44,6 @@ class Searcher {
         return res;
     }
     createRequest(options) {
-        let sendLog = false;
-        if (options.q === "01006684") sendLog = true;
-
-        sendLog && console.log("options ==========================", options);
         let filters = [];
         if (options.sort_by) {
             sort_by_val = options.sort_by.split("(")[1].split(")")[0];
@@ -57,7 +53,6 @@ class Searcher {
         if (options.filters) {
             filters = this.parseFilter(options.filters);
         }
-        sendLog && console.log("filters ==========================", filters);
 
         let range = {};
         Object.keys(options.range || {}).forEach(key => {
@@ -74,7 +69,6 @@ class Searcher {
             filterRange.push({ range: range });
         }
         let query = { query: {} };
-        sendLog && console.log("query ==========================", query);
 
         if (options.fields && options.q) {
             query.query.bool = query.query.bool || {};
@@ -97,8 +91,6 @@ class Searcher {
                 };
             }
         }
-        sendLog && console.log("query 2 ==========================", query);
-
 
         if (options.count) {
             query.size = options.count;
@@ -117,12 +109,9 @@ class Searcher {
                 query.sort.push({ [sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc" });
             });
         }
-
-        sendLog && console.log("query 3 ==========================", query);
-
         if (!options.notAddSort) query.sort.push({ id: "asc" });
         if (query.query.bool && query.query.bool.must) {
-            if (filters.bool.must) {
+            if (!Array.isArray(filters) && filters.bool.must) {
                 filters.bool.must.push(query.query.bool.must);
                 query.query.bool = filters.bool;
             } else {
@@ -132,14 +121,18 @@ class Searcher {
         } else {
             query.query.bool = filters.bool;
         }
-        sendLog && console.log("query 4 ==========================", query);
-
         if (query.query.bool) query.query.bool.filter = filterRange;
         else {
             query.query.bool = { filter: [] };
         }
-        sendLog && console.log("query 5 ==========================", query);
 
+        if (query.query.bool && query.query.bool.must) {
+            query.query.bool.must = query.query.bool.must.filter(item => {
+                if (!Object.keys(item).length) return false;
+                return !Object.keys(item).every(key => !item[key]);
+            });
+            query.query.bool.must.forEach(item => console.log(item));
+        }
         return query;
     }
 
@@ -176,7 +169,6 @@ class Searcher {
         }).then(body => {
             // Fix for npi search
             const returnObject = [
-                "event_v2",
                 "npi_location",
                 "npi_entity",
                 "log_line",
