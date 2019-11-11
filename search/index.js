@@ -45,7 +45,7 @@ class Searcher {
     }
     createRequest(options) {
         let sendLog = false;
-        if (q === "01006684") sendLog = true;
+        if (options.q === "01006684") sendLog = true;
 
         sendLog && console.log("options ==========================", options);
         let filters = [];
