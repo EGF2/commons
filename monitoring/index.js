@@ -29,7 +29,7 @@ const pingMonitoring = (url, serviceName, status) =>
           const result = await axios.get(
             `${process.env.ECS_CONTAINER_METADATA_URI}/task`
           );
-          salt =`${result.data.Family}|${result.data.Name}|${(result.data.TaskARN.split("/"))[1]}`;
+          salt =`${result.data.Family}|${result.data.Containers[0].Name}|${(result.data.TaskARN.split("/"))[1]}`;
         } catch (e) {
           salt = uuid();
         }
