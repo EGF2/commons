@@ -64,6 +64,7 @@ function newClient(url, mode) {
                 err = e;
                 if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
                 if (ignoreErrors) {
+                    if ((e.body && e.body.code === "CannotChangeDeletedObject") || e.message.includes("CannotChangeDeletedObject")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "ObjectDeleted") || e.message.includes("ObjectDeleted")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "SourceWasDeleted") || e.message.includes("SourceWasDeleted")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return { message: new Date().toISOString() };
