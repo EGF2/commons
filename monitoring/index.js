@@ -1,6 +1,7 @@
 const axios = require("axios");
 const uuid = require("uuid/v4");
-const salt = uuid();
+
+let salt = "";
 
 const getIPAddress = () => {
   const interfaces = require("os").networkInterfaces();
@@ -20,17 +21,34 @@ const getIPAddress = () => {
   return "0.0.0.0";
 };
 
-const pingMonitoring = (url, serviceName, status) => {
-  return axios({
-    method: "POST",
-    url,
-    data: {
-      service_type: serviceName,
-      service_ip: getIPAddress(),
-      status,
-      salt
+const pingMonitoring = (url, serviceName, status) =>
+  new Promise(async (resolve, reject) => {
+    try {
+      if (!salt) {
+        try {
+          const result = await axios.get(
+            `${process.env.ECS_CONTAINER_METADATA_URI}/task`
+          );
+          salt =`${result.data.Family}|${result.data.Containers[0].Name}|${(result.data.TaskARN.split("/"))[1]}`;
+        } catch (e) {
+          salt = uuid();
+        }
+      }
+
+      const res = await axios({
+        method: "POST",
+        url,
+        data: {
+          service_type: serviceName,
+          service_ip: getIPAddress(),
+          status,
+          salt
+        }
+      });
+      resolve(res);
+    } catch (e) {
+      reject(e);
     }
   });
-};
 
 module.exports.pingMonitoring = pingMonitoring;
