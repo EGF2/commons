@@ -1,7 +1,7 @@
 "use strict";
 
 const restify = require("restify-clients");
-const errors = require("restify-errors")
+const errors = require("restify-errors");
 
 // Authorization header
 const AUTH = "authorization";
@@ -60,9 +60,24 @@ class Client {
             }
 
             client.get(`/v2/internal/auth/session?token=${token}`, (err, req, res, obj) => {
+                if (err) {
+                    return reject(err);
+                }
+                if (!obj) {
+                    return reject(new errors.UnauthorizedError("Token not found"));
+                }
                 if (obj.deleted_at) {
                     return reject(new errors.UnauthorizedError("Bearer token doesn't exist"));
                 }
+                resolve(obj);
+            });
+        });
+    }
+
+    register(params) {
+        let client = this.client;
+        return new Promise((resolve, reject) => {
+            client.post("/v2/internal/auth/register", params, (err, req, res, obj) => {
                 if (err) {
                     return reject(err);
                 }
@@ -80,7 +95,7 @@ module.exports.Client = Client;
   */
 function handler(url, allowPublicAccess) {
     let client = new Client(url);
-    return function (req, res, next) {
+    return function(req, res, next) {
         client.checkToken(req).then(session => {
             req.session = session; // set session to request
             if (session.user) {
