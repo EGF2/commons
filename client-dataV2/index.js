@@ -155,6 +155,8 @@ function newClient(url, mode) {
             return this.getGraphConfig().then(() => codeToObjectType[id.slice(-2)]);
         },
 
+        resolveUniqueCode: code => handle("GET", `/v2/client-data/resolve_unique/${code}`),
+
         /**
          * Get object
          */
