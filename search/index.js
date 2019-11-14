@@ -131,7 +131,6 @@ class Searcher {
                 if (!Object.keys(item).length) return false;
                 return !Object.keys(item).every(key => !item[key]);
             });
-            query.query.bool.must.forEach(item => console.log(item));
         }
         return query;
     }
