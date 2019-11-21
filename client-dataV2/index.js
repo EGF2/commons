@@ -45,12 +45,12 @@ function newClient(url, mode, tracer) {
             path,
             headers: {}
         };
-
-        span.setTag(Tags.HTTP_URL, path);
-        span.setTag(Tags.HTTP_METHOD, method);
-        span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
-
-        tracer.inject(span, FORMAT_HTTP_HEADERS, options.headers);
+        if (span) {
+            span.setTag(Tags.HTTP_URL, path);
+            span.setTag(Tags.HTTP_METHOD, method);
+            span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
+            tracer.inject(span, FORMAT_HTTP_HEADERS, options.headers);
+        }
 
         if (mode && mode.service) options.headers.service = mode.service;
         if (author) options.headers.Author = author;
@@ -79,13 +79,16 @@ function newClient(url, mode, tracer) {
                 continue;
             }
         }
-        span.setTag(Tags.ERROR, true);
-        span.setTag(Tags.HTTP_STATUS_CODE, err.statusCode);
-        span.log({
-            event: "error",
-            message: err.message,
-            err
-        });
+        if (span) {
+            span.setTag(Tags.ERROR, true);
+            span.setTag(Tags.HTTP_STATUS_CODE, err.statusCode);
+            span.log({
+                event: "error",
+                message: err.message,
+                err
+            });
+        }
+
         throw err;
     };
 
