@@ -93,10 +93,10 @@ module.exports.Client = Client;
   * @param url - url to Auth server
   * @param allowPublicAccess - function which take request and return promise of bool value
   */
-function handler(url, allowPublicAccess, rootSpan, tracer) {
+function handler(url, allowPublicAccess, tracer) {
     let client = new Client(url);
     return async function(req, res, next) {
-        const span = tracer.startSpan("Check auth", { kindOf: rootSpan, tags: { session: req.session }});
+        const span = tracer.startSpan("Check auth", { kindOf: req.span, tags: { session: req.session }});
         try {
             const session = await client.checkToken(req, span);
             req.session = session; // set session to request
