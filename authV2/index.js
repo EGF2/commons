@@ -93,26 +93,36 @@ module.exports.Client = Client;
   * @param url - url to Auth server
   * @param allowPublicAccess - function which take request and return promise of bool value
   */
-function handler(url, allowPublicAccess) {
+function handler(url, allowPublicAccess, rootSpan, tracer) {
     let client = new Client(url);
-    return function(req, res, next) {
-        client.checkToken(req).then(session => {
+    return async function(req, res, next) {
+        const span = tracer.startSpan("Check auth", { kindOf: rootSpan, tags: { session: req.session }});
+        try {
+            const session = await client.checkToken(req, span);
             req.session = session; // set session to request
             if (session.user) {
                 req.user = session.user; // set user to request
             }
-            next();
-        }).catch(err => {
+            span.finish();
+            return next();
+        } catch (e) {
+            span.log({event: "Error checkToken. Check allowPublicAccess"});
             if (allowPublicAccess) {
-                return allowPublicAccess(req).then(ok => {
-                    if (ok) {
+                try {
+                    if (await allowPublicAccess(req, span)) {
+                        span.finish();
                         return next();
                     }
-                    return next(err);
-                }).catch(err => next(err));
+                } catch (e) {
+                    span.log({event: "Error allowPublicAccess"});
+                    span.finish();
+                    return next(e);
+                }
             }
-            next(err);
-        });
+            span.log({event: "Error checkToken"});
+            span.finish();
+            return next(e);
+        }
     };
 }
 module.exports = {
