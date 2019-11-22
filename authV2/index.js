@@ -96,7 +96,7 @@ module.exports.Client = Client;
 function handler(url, allowPublicAccess, tracer) {
     let client = new Client(url);
     return async function(req, res, next) {
-        const span = tracer.startSpan("Check auth", { kindOf: req.span, tags: { session: req.session }});
+        const span = tracer.startSpan("Check auth", { childOf: req.span, tags: { session: req.session }});
         try {
             const session = await client.checkToken(req, span);
             req.session = session; // set session to request
