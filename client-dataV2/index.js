@@ -40,12 +40,13 @@ function newClient(url, mode, tracer) {
 
     const timeout = async ms => new Promise(res => setTimeout(res, ms));
 
-    const handle = async (span, method, path, body, author, notProcess) => {
+    const handle = async (option, method, path, body, author, notProcess) => {
         const options = {
             path,
             headers: {}
         };
-        if (span) {
+        let span;
+        if (option.span) {
             span.setTag(Tags.HTTP_URL, path);
             span.setTag(Tags.HTTP_METHOD, method);
             span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
@@ -103,11 +104,11 @@ function newClient(url, mode, tracer) {
         /**
          * Get graph config
          */
-        getGraphConfig: function (span) {
+        getGraphConfig: function (options) {
             if (graphConfig) {
                 return Promise.resolve(graphConfig);
             }
-            return handle(span, "GET", "/v2/client-data/graph")
+            return handle(options, "GET", "/v2/client-data/graph")
                 .then(result => {
                     graphConfig = result;
                     codeToObjectType = {};
@@ -120,11 +121,11 @@ function newClient(url, mode, tracer) {
                 });
         },
 
-        getAggregatesConfig: function (span) {
+        getAggregatesConfig: function (options) {
             if (aggregatesConfig) {
                 return Promise.resolve(aggregatesConfig);
             }
-            return handle(span, "GET", "/v2/client-data/aggregates")
+            return handle(options, "GET", "/v2/client-data/aggregates")
                 .then(result => {
                     aggregatesConfig = result;
                     return aggregatesConfig;
@@ -133,8 +134,8 @@ function newClient(url, mode, tracer) {
         /**
          * Get edge config
          */
-        getEdgeConfig: function (objOrID, edgeName, span) {
-            return this.getGraphConfig(span).then(config => {
+        getEdgeConfig: function (objOrID, edgeName, options) {
+            return this.getGraphConfig(options).then(config => {
                 let objectType;
                 if (typeof objOrID === "string") {
                     if (objOrID in config) {
@@ -159,23 +160,23 @@ function newClient(url, mode, tracer) {
         /*
          * Get aggregate
         */
-        getAggregate: (id, aggregate, span, author, v) =>
-            handle(span, "GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}&v${v}`, null, author),
+        getAggregate: (id, aggregate, options, author, v) =>
+            handle(options, "GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}&v${v}`, null, author),
 
         /**
          * Get object type by ID
          */
-        getObjectType: function (id, span) {
-            return this.getGraphConfig(span).then(() => codeToObjectType[id.slice(-2)]);
+        getObjectType: function (id, options) {
+            return this.getGraphConfig(options).then(() => codeToObjectType[id.slice(-2)]);
         },
 
-        resolveUniqueCode: (code, span) => handle(span, "GET", `/v2/client-data/resolve_unique/${code}`),
+        resolveUniqueCode: (code, options) => handle(options, "GET", `/v2/client-data/resolve_unique/${code}`),
 
         /**
          * Get object
          */
-        getObject: function (id, span, options, author) {
-            return handle(span, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
+        getObject: function (id, options, author) {
+            return handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -183,12 +184,12 @@ function newClient(url, mode, tracer) {
         /**
          * Get objects
          */
-        getObjects: function (ids, span, options, author) {
+        getObjects: function (ids, options, author) {
             if (typeof ids.slice(-1)[0] === "object") {
                 options = ids.slice(-1)[0];
                 ids = ids.slice(0, -1);
             }
-            return handle(span, "GET", `/v2/client-data/graph/${ids.join(",")}`, "", author).then(result =>
+            return handle(options, "GET", `/v2/client-data/graph/${ids.join(",")}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -196,28 +197,28 @@ function newClient(url, mode, tracer) {
         /**
          * Create object
          */
-        createObject: (object, span, author, notProcess) => handle(span, "POST", "/v2/client-data/graph", object, author, notProcess),
+        createObject: (object, options, author, notProcess) => handle(options, "POST", "/v2/client-data/graph", object, author, notProcess),
 
         /**
          * Update object
          */
-        updateObject: (id, delta, span, author, notProcess) => handle(span, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
+        updateObject: (id, delta, options, author, notProcess) => handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
 
         /**
          * Replace object
          */
-        replaceObject: (id, object, span, author, notProcess) => handle(span, "PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
+        replaceObject: (id, object, options, author, notProcess) => handle(options, "PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
 
         /**
          * Delete object
          */
-        deleteObject: (id, span, author, notProcess) => handle(span, "DELETE", `/v2/client-data/graph/${id}`, undefined, author, notProcess),
+        deleteObject: (id, options, author, notProcess) => handle(options, "DELETE", `/v2/client-data/graph/${id}`, undefined, author, notProcess),
 
         /**
          * Get edge
          */
-        getEdge: function (srcID, edgeName, dstID, span, options) {
-            return handle(span, "GET", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
+        getEdge: function (srcID, edgeName, dstID, options) {
+            return handle(options, "GET", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -225,12 +226,12 @@ function newClient(url, mode, tracer) {
         /**
          * Get all edges
          */
-        getAllEdges: (srcID, edgeName, span, v) => handle(span, "GET", `/v2/client-data/getAllEdges/${srcID}/${edgeName}?v=${v}`),
+        getAllEdges: (srcID, edgeName, options, v) => handle(options, "GET", `/v2/client-data/getAllEdges/${srcID}/${edgeName}?v=${v}`),
 
         /**
          * Get edges
          */
-        getEdges: function (srcID, edgeName, span, options) {
+        getEdges: function (srcID, edgeName, options) {
             let url = `/v2/client-data/graph/${srcID}/${edgeName}`;
             if (options) {
                 let params = [];
@@ -244,7 +245,7 @@ function newClient(url, mode, tracer) {
                     url += `?${params.join("&")}`;
                 }
             }
-            return handle(span, "GET", url).then(result =>
+            return handle(options, "GET", url).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -252,26 +253,26 @@ function newClient(url, mode, tracer) {
         /**
          * Create edge
          */
-        createEdge: (srcID, edgeName, span, dstID, author, notProcess) =>
-            handle(span, "POST", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
+        createEdge: (srcID, edgeName, dstID, options, author, notProcess) =>
+            handle(options, "POST", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
 
         /**
          * Delete edge
          */
-        deleteEdge: (srcID, edgeName, dstID, span, author, notProcess) =>
-            handle(span, "DELETE", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
+        deleteEdge: (srcID, edgeName, dstID, options, author, notProcess) =>
+            handle(options, "DELETE", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
 
         /**
          * Create audit
          */
-        createAudit: (auditLog, span, author) =>
-            handle(span, "POST", "/v2/client-data/audit", auditLog, author),
+        createAudit: (auditLog, options, author) =>
+            handle(options, "POST", "/v2/client-data/audit", auditLog, author),
 
         /**
          * Check unique value
          */
-        checkUnique: (value, span) =>
-            handle(span, "GET", `/v2/client-data/check_unique?value=${value}`),
+        checkUnique: (value, options) =>
+            handle(options, "GET", `/v2/client-data/check_unique?value=${value}`),
 
         /**
          * Handle all pages
