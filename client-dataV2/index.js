@@ -46,7 +46,7 @@ function newClient(url, mode, tracer) {
             headers: {}
         };
         let span;
-        if (option.span) {
+        if (option && option.span) {
             span.setTag(Tags.HTTP_URL, path);
             span.setTag(Tags.HTTP_METHOD, method);
             span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
