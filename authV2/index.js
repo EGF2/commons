@@ -96,13 +96,15 @@ module.exports.Client = Client;
 function handler(url, allowPublicAccess, tracer) {
     let client = new Client(url);
     return async function(req, res, next) {
-        const span = tracer.startSpan("Check auth", { childOf: req.span, tags: { session: req.session }});
+        const span = tracer.startSpan("Check auth", {childOf: req.span, tags: {session: req.session}});
+        span.log({params: req.params, path: req.path()});
         try {
             const session = await client.checkToken(req, span);
             req.session = session; // set session to request
             if (session.user) {
                 req.user = session.user; // set user to request
             }
+            span.log({message: "Access is allowed "});
             span.finish();
             return next();
         } catch (e) {
@@ -110,16 +112,17 @@ function handler(url, allowPublicAccess, tracer) {
             if (allowPublicAccess) {
                 try {
                     if (await allowPublicAccess(req, span)) {
+                        span.log({message: "Access is allowed "});
                         span.finish();
                         return next();
                     }
                 } catch (e) {
-                    span.log({event: "Error allowPublicAccess"});
+                    span.log({event: "Error allowPublicAccess. Access denied", error: e.message});
                     span.finish();
                     return next(e);
                 }
             }
-            span.log({event: "Error checkToken"});
+            span.log({event: "Error checkToken. Access denied"});
             span.finish();
             return next(e);
         }
