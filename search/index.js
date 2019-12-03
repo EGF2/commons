@@ -136,7 +136,11 @@ class Searcher {
     }
 
     search(options, rootSpan, tracer) {
-        const span = tracer.startSpan("search node_modules", { childOf: rootSpan });
+        let span = {
+            log: () => {},
+            finish: () => {}
+        };
+        if (rootSpan && tracer) span = tracer.startSpan("search node_modules", { childOf: rootSpan });
         let query = Promise.resolve();
         return query.then(searchAfter => {
             let request = this.createRequest(options);
