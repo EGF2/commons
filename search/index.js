@@ -140,7 +140,7 @@ class Searcher {
             log: () => {},
             finish: () => {}
         };
-        if (rootSpan && tracer) span = tracer.startSpan("search node_modules", { childOf: rootSpan });
+        if (rootSpan && tracer) span = tracer.startSpan("es", { childOf: rootSpan, tags: { function: "search" } });
         let query = Promise.resolve();
         return query.then(searchAfter => {
             let request = this.createRequest(options);
@@ -164,14 +164,14 @@ class Searcher {
 
             const aliases = ["roles"];
             const type = aliases.includes(options.object) ? null : options.object;
-            span.log({event: "start es", opt: {index: options.object, body: request}});
+            span.log({event: "start es", opt: { index: options.object, body: request }});
             return this.elastic.search({
                 index: options.object,
                 type,
                 body: request
             });
         }).then(body => {
-            span.log({event: "end es"})
+            span.log({event: "end es"});
             // Fix for npi search
             const returnObject = [
                 "npi_location",
