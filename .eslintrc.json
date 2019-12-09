@@ -1,12 +1,47 @@
 {
   "env": {
+    "commonjs": true,
+    "es6": true,
+    "node": true,
     "mocha": true
   },
-  "extends": "eslint-config-xo",
+  "extends": ["airbnb-base", "prettier"],
+  "plugins": ["prettier"],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
   "rules": {
-    "quotes": ["error", "double"],
-    "indent": ["error", 4],
-    "space-before-function-paren": ["error", "never"],
-    "generator-star-spacing": ["error", "before"]
+    "prettier/prettier": "error",
+    "no-console": "off",
+    "class-methods-use-this": "off",
+    "no-use-before-define": ["error", { "functions": false, "classes": false }],
+    "no-shadow": "off",
+    "consistent-return": "off",
+    "no-void": "off",
+    "no-restricted-syntax": "off",
+    "no-await-in-loop": "off",
+    "prefer-destructuring": "off",
+    "array-callback-return": "off",
+    "no-param-reassign": "off",
+    "import/no-dynamic-require": "off",
+    "global-require": "off",
+    "func-names": "off",
+    "no-underscore-dangle": "off",
+    "camelcase": "off",
+    "no-constant-condition": "off",
+    "no-plusplus": "off",
+    "no-continue": "off",
+    "guard-for-in": "off",
+    "no-case-declarations": "off",
+    "no-nested-ternary": "off",
+    "no-prototype-builtins": "off",
+    "no-unused-vars": ["error", { "args": "none" }],
+    "default-case": "off",
+    "prefer-promise-reject-errors": "off",
+    "no-restricted-globals": "off"
   }
 }
