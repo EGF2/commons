@@ -127,7 +127,8 @@ function handler(url, allowPublicAccess, tracer) {
     if (req.span.fake) {
       span = {
         setTag: () => {},
-        log: () => {}
+        log: () => {},
+        finish: () => {},
       };
     } else {
       span = tracer.startSpan("checkAuth", {
