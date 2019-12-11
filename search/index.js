@@ -196,6 +196,17 @@ class Searcher {
             return res;
         });
     }
+    delete(options) {
+        if (options.ids) {
+            for (const id of options.ids) {
+                this.elastic.delete({
+                    index: options.index,
+                    type: options.index,
+                    id
+                });
+            }
+        }
+    }
 }
 
 module.exports.Searcher = Searcher;
