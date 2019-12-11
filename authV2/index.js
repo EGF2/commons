@@ -123,10 +123,19 @@ module.exports.Client = Client;
 function handler(url, allowPublicAccess, tracer) {
   let client = new Client(url, tracer);
   return async function(req, res, next) {
-    const span = tracer.startSpan("checkAuth", {
-      childOf: req.span,
-      tags: { session: req.session, function: "checkAuth" }
-    });
+    let span;
+    if (req.span.fake) {
+      span = {
+        setTag: () => {},
+        log: () => {}
+      };
+    } else {
+      span = tracer.startSpan("checkAuth", {
+        childOf: req.span,
+        tags: { session: req.session, function: "checkAuth" }
+      });
+    }
+
     span.log({ params: req.params, path: req.path() });
     try {
       const session = await client.checkToken(req, span);
