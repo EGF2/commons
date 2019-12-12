@@ -45,7 +45,11 @@ function newClient(url, mode, tracer) {
             path,
             headers: {}
         };
-        let span;
+        let span = {
+            log: () => {},
+            setTag: () => {},
+        };
+
         if (option && option.span) {
             span = option.span;
             span.setTag(Tags.HTTP_URL, path);
@@ -53,7 +57,7 @@ function newClient(url, mode, tracer) {
             span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
             tracer.inject(span, FORMAT_HTTP_HEADERS, options.headers);
         }
-
+        span.log({message: "start handler"});
         if (mode && mode.service) options.headers.service = mode.service;
         if (author) options.headers.Author = author;
         if (notProcess) options.headers.notProcess = notProcess;
@@ -64,9 +68,12 @@ function newClient(url, mode, tracer) {
         for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
             let res;
             try {
+                span.log({message: "start request"});
                 res = await request(method, { options, body });
+                span.log({message: "recived result"});
                 return res;
             } catch (e) {
+                span.log({message: "recived error"});
                 err = e;
                 if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
                 if (ignoreErrors) {
@@ -232,6 +239,7 @@ function newClient(url, mode, tracer) {
         /**
          * Get edges
          */
+        // eslint-disable-next-line object-shorthand
         getEdges: function (srcID, edgeName, options) {
             let url = `/v2/client-data/graph/${srcID}/${edgeName}`;
             if (options) {
