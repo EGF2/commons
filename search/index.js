@@ -207,6 +207,10 @@ class Searcher {
             }
         }
     }
+    bulkDelete(options) {
+        let bulk = options.ids.map(id => ({ delete: { _index: options.index, _type: options.index, _id: id } }) )
+        return this.elastic.bulk({body: bulk});
+    }
 }
 
 module.exports.Searcher = Searcher;
