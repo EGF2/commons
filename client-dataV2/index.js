@@ -2,12 +2,15 @@
 
 const restify = require("restify-clients");
 const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
+const axios = require("axios");
+let _url;
 
 function newClient(url, mode, tracer) {
-    const client = restify.createJsonClient({
-        url,
-        version: "*"
-    });
+    _url = url;
+    // const client = restify.createJsonClient({
+    //     url,
+    //     version: "*"
+    // });
 
     let ignoreErrors;
 
@@ -19,23 +22,31 @@ function newClient(url, mode, tracer) {
     const maxTimeout = 3500;
 
     const request = (method, params) => {
-        return new Promise((resolve, reject) => {
-            const callback = (err, req, res, obj) => {
-                if (err) return reject(err);
-                resolve(obj);
-            };
-            if (method === "GET") {
-                client.get(params.options, callback);
-            } else if (method === "POST") {
-                client.post(params.options, params.body, callback);
-            } else if (method === "PUT") {
-                client.put(params.options, params.body, callback);
-            } else if (method === "PATCH") {
-                client.patch(params.options, params.body, callback);
-            } else if (method === "DELETE") {
-                client.del(params.options, callback);
-            }
+        const res = await axios({
+            method,
+            url: `${_url}${params.path}`,
+            headers: params.headers || {},
+            data: params.body || {}
         });
+        return res.data;
+
+        // return new Promise((resolve, reject) => {
+        //     const callback = (err, req, res, obj) => {
+        //         if (err) return reject(err);
+        //         resolve(obj);
+        //     };
+        //     if (method === "GET") {
+        //         client.get(params.options, callback);
+        //     } else if (method === "POST") {
+        //         client.post(params.options, params.body, callback);
+        //     } else if (method === "PUT") {
+        //         client.put(params.options, params.body, callback);
+        //     } else if (method === "PATCH") {
+        //         client.patch(params.options, params.body, callback);
+        //     } else if (method === "DELETE") {
+        //         client.del(params.options, callback);
+        //     }
+        // });
     };
 
     const timeout = async ms => new Promise(res => setTimeout(res, ms));
