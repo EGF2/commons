@@ -22,31 +22,31 @@ function newClient(url, mode, tracer) {
     const maxTimeout = 3500;
 
     const request = async (method, params) => {
-        const res = await axios({
-            method,
-            url: `${_url}${params.options.path}`,
-            headers: params.headers || {},
-            data: params.options.body || {}
-        });
-        return res.data;
+    //     const res = await axios({
+    //         method,
+    //         url: `${_url}${params.options.path}`,
+    //         headers: params.headers || {},
+    //         data: params.options.body || {}
+    //     });
+    //     return res.data;
 
-        // return new Promise((resolve, reject) => {
-        //     const callback = (err, req, res, obj) => {
-        //         if (err) return reject(err);
-        //         resolve(obj);
-        //     };
-        //     if (method === "GET") {
-        //         client.get(params.options, callback);
-        //     } else if (method === "POST") {
-        //         client.post(params.options, params.body, callback);
-        //     } else if (method === "PUT") {
-        //         client.put(params.options, params.body, callback);
-        //     } else if (method === "PATCH") {
-        //         client.patch(params.options, params.body, callback);
-        //     } else if (method === "DELETE") {
-        //         client.del(params.options, callback);
-        //     }
-        // });
+        return new Promise((resolve, reject) => {
+            const callback = (err, req, res, obj) => {
+                if (err) return reject(err);
+                resolve(obj);
+            };
+            if (method === "GET") {
+                client.get(params.options, callback);
+            } else if (method === "POST") {
+                client.post(params.options, params.body, callback);
+            } else if (method === "PUT") {
+                client.put(params.options, params.body, callback);
+            } else if (method === "PATCH") {
+                client.patch(params.options, params.body, callback);
+            } else if (method === "DELETE") {
+                client.del(params.options, callback);
+            }
+        });
     };
 
     const timeout = async ms => new Promise(res => setTimeout(res, ms));
