@@ -7,10 +7,10 @@ let _url;
 
 function newClient(url, mode, tracer) {
     _url = url;
-    // const client = restify.createJsonClient({
-    //     url,
-    //     version: "*"
-    // });
+    const client = restify.createJsonClient({
+        url,
+        version: "*"
+    });
 
     let ignoreErrors;
 
