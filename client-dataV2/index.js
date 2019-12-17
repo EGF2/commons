@@ -24,9 +24,9 @@ function newClient(url, mode, tracer) {
     const request = async (method, params) => {
         const res = await axios({
             method,
-            url: `${_url}${params.path}`,
+            url: `${_url}${params.options.path}`,
             headers: params.headers || {},
-            data: params.body || {}
+            data: params.options.body || {}
         });
         return res.data;
 
