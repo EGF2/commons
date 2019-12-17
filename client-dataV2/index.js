@@ -21,7 +21,7 @@ function newClient(url, mode, tracer) {
     const deltaInterval = 20;
     const maxTimeout = 3500;
 
-    const request = (method, params) => {
+    const request = async (method, params) => {
         const res = await axios({
             method,
             url: `${_url}${params.path}`,
