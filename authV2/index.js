@@ -124,7 +124,7 @@ function handler(url, allowPublicAccess, tracer) {
   let client = new Client(url, tracer);
   return async function(req, res, next) {
     let span;
-    if (req.span.fake) {
+    if (!req.span || (req.span && req.span.fake)) {
       span = {
         setTag: () => {},
         log: () => {},
