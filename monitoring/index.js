@@ -31,7 +31,7 @@ const pingMonitoring = (url, serviceName, status) =>
           );
           salt =`${result.data.Family}|${result.data.Containers[0].Name}|${(result.data.TaskARN.split("/"))[1]}`;
         } catch (e) {
-          return;
+          return resolve();
           // salt = uuid();
         }
       }
