@@ -66,7 +66,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 "Content-Type": "application/vnd.kafka.v2+json"
             },
             data: config.kafka.consumer_settings || {
-                name: `logic${String(Math.random()).slice(-4)}`,
+                name: `${config.kafka.group_id}${String(Math.random()).slice(-4)}`,
                 "format": "binary",
                 "auto.offset.reset": "earliest",
                 "auto.commit.enable": "false"
