@@ -1,10 +1,13 @@
 "use strict";
 
 const restify = require("restify-clients");
+const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
+const axios = require("axios");
+let _url;
 
-function newClient(url, mode) {
-
-    let client = restify.createJsonClient({
+function newClient(url, mode, tracer) {
+    _url = url;
+    const client = restify.createJsonClient({
         url,
         version: "*"
     });
@@ -18,12 +21,18 @@ function newClient(url, mode) {
     const deltaInterval = 20;
     const maxTimeout = 3500;
 
-    let request = (method, params) => {
+    const request = async (method, params) => {
+    //     const res = await axios({
+    //         method,
+    //         url: `${_url}${params.options.path}`,
+    //         headers: params.headers || {},
+    //         data: params.options.body || {}
+    //     });
+    //     return res.data;
+
         return new Promise((resolve, reject) => {
-            let callback = (err, req, res, obj) => {
-                if (err) {
-                    return reject(err);
-                }
+            const callback = (err, req, res, obj) => {
+                if (err) return reject(err);
                 resolve(obj);
             };
             if (method === "GET") {
@@ -40,32 +49,45 @@ function newClient(url, mode) {
         });
     };
 
-    const timeout = async ms => {
-        return new Promise(res => setTimeout(res, ms));
-    };
+    const timeout = async ms => new Promise(res => setTimeout(res, ms));
 
-    const handle = async (method, path, body, author, notProcess) => {
-        let options = {
+    const handle = async (option, method, path, body, author, notProcess) => {
+        const options = {
             path,
             headers: {}
         };
+        let span = {
+            log: () => {},
+            setTag: () => {},
+        };
+
+        if (option && option.span) {
+            span = option.span;
+            span.setTag(Tags.HTTP_URL, path);
+            span.setTag(Tags.HTTP_METHOD, method);
+            span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
+            tracer.inject(span, FORMAT_HTTP_HEADERS, options.headers);
+        }
+        span.log({message: "start handler"});
         if (mode && mode.service) options.headers.service = mode.service;
         if (author) options.headers.Author = author;
         if (notProcess) options.headers.notProcess = notProcess;
+
         let err;
         let waitTime = 0;
         const objErr = {};
         for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
             let res;
             try {
+                span.log({message: "start request"});
                 res = await request(method, { options, body });
+                span.log({message: "recived result"});
                 return res;
             } catch (e) {
+                span.log({message: "recived error"});
                 err = e;
                 if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
                 if (ignoreErrors) {
-                    if ((e.body && e.body.code === "CannotChangeDeletedObject") || e.message.includes("CannotChangeDeletedObject")) return { message: new Date().toISOString() };
-                    if ((e.body && e.body.code === "ObjectDeletedError") || e.message.includes("Couldn't change deleted object")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "ObjectDeleted") || e.message.includes("ObjectDeleted")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "SourceWasDeleted") || e.message.includes("SourceWasDeleted")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return { message: new Date().toISOString() };
@@ -77,6 +99,16 @@ function newClient(url, mode) {
                 continue;
             }
         }
+        if (span) {
+            span.setTag(Tags.ERROR, true);
+            span.setTag(Tags.HTTP_STATUS_CODE, err.statusCode);
+            span.log({
+                event: "error",
+                message: err.message,
+                err
+            });
+        }
+
         throw err;
     };
 
@@ -91,11 +123,11 @@ function newClient(url, mode) {
         /**
          * Get graph config
          */
-        getGraphConfig: function () {
+        getGraphConfig: function (options) {
             if (graphConfig) {
                 return Promise.resolve(graphConfig);
             }
-            return handle("GET", "/v2/client-data/graph")
+            return handle(options, "GET", "/v2/client-data/graph")
                 .then(result => {
                     graphConfig = result;
                     codeToObjectType = {};
@@ -108,11 +140,11 @@ function newClient(url, mode) {
                 });
         },
 
-        getAggregatesConfig: function () {
+        getAggregatesConfig: function (options) {
             if (aggregatesConfig) {
                 return Promise.resolve(aggregatesConfig);
             }
-            return handle("GET", "/v2/client-data/aggregates")
+            return handle(options, "GET", "/v2/client-data/aggregates")
                 .then(result => {
                     aggregatesConfig = result;
                     return aggregatesConfig;
@@ -121,8 +153,8 @@ function newClient(url, mode) {
         /**
          * Get edge config
          */
-        getEdgeConfig: function (objOrID, edgeName) {
-            return this.getGraphConfig().then(config => {
+        getEdgeConfig: function (objOrID, edgeName, options) {
+            return this.getGraphConfig(options).then(config => {
                 let objectType;
                 if (typeof objOrID === "string") {
                     if (objOrID in config) {
@@ -147,22 +179,23 @@ function newClient(url, mode) {
         /*
          * Get aggregate
         */
-        getAggregate: (id, aggregate, author, v) => handle("GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}&v${v}`,null ,author),
+        getAggregate: (id, aggregate, options, author, v) =>
+            handle(options, "GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}&v${v}`, null, author),
 
         /**
          * Get object type by ID
          */
-        getObjectType: function (id) {
-            return this.getGraphConfig().then(() => codeToObjectType[id.slice(-2)]);
+        getObjectType: function (id, options) {
+            return this.getGraphConfig(options).then(() => codeToObjectType[id.slice(-2)]);
         },
 
-        resolveUniqueCode: code => handle("GET", `/v2/client-data/resolve_unique/${code}`),
+        resolveUniqueCode: (code, options) => handle(options, "GET", `/v2/client-data/resolve_unique/${code}`),
 
         /**
          * Get object
          */
         getObject: function (id, options, author) {
-            return handle("GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
+            return handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -175,7 +208,7 @@ function newClient(url, mode) {
                 options = ids.slice(-1)[0];
                 ids = ids.slice(0, -1);
             }
-            return handle("GET", `/v2/client-data/graph/${ids.join(",")}`, "", author).then(result =>
+            return handle(options, "GET", `/v2/client-data/graph/${ids.join(",")}`, "", author).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -183,28 +216,28 @@ function newClient(url, mode) {
         /**
          * Create object
          */
-        createObject: (object, author, notProcess) => handle("POST", "/v2/client-data/graph", object, author, notProcess),
+        createObject: (object, options, author, notProcess) => handle(options, "POST", "/v2/client-data/graph", object, author, notProcess),
 
         /**
          * Update object
          */
-        updateObject: (id, delta, author, notProcess) => handle("PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
+        updateObject: (id, delta, options, author, notProcess) => handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
 
         /**
          * Replace object
          */
-        replaceObject: (id, object, author, notProcess) => handle("PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
+        replaceObject: (id, object, options, author, notProcess) => handle(options, "PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
 
         /**
          * Delete object
          */
-        deleteObject: (id, author, notProcess) => handle("DELETE", `/v2/client-data/graph/${id}`, undefined, author, notProcess),
+        deleteObject: (id, options, author, notProcess) => handle(options, "DELETE", `/v2/client-data/graph/${id}`, undefined, author, notProcess),
 
         /**
          * Get edge
          */
         getEdge: function (srcID, edgeName, dstID, options) {
-            return handle("GET", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
+            return handle(options, "GET", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -212,11 +245,12 @@ function newClient(url, mode) {
         /**
          * Get all edges
          */
-        getAllEdges: (srcID, edgeName, v) => handle("GET", `/v2/client-data/getAllEdges/${srcID}/${edgeName}?v=${v}`),
+        getAllEdges: (srcID, edgeName, options, v) => handle(options, "GET", `/v2/client-data/getAllEdges/${srcID}/${edgeName}?v=${v}`),
 
         /**
          * Get edges
          */
+        // eslint-disable-next-line object-shorthand
         getEdges: function (srcID, edgeName, options) {
             let url = `/v2/client-data/graph/${srcID}/${edgeName}`;
             if (options) {
@@ -231,7 +265,7 @@ function newClient(url, mode) {
                     url += `?${params.join("&")}`;
                 }
             }
-            return handle("GET", url).then(result =>
+            return handle(options, "GET", url).then(result =>
                 options && options.expand ? this.expand(result, options.expand) : result
             );
         },
@@ -239,22 +273,26 @@ function newClient(url, mode) {
         /**
          * Create edge
          */
-        createEdge: (srcID, edgeName, dstID, author, notProcess) => handle("POST", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
+        createEdge: (srcID, edgeName, dstID, options, author, notProcess) =>
+            handle(options, "POST", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, {}, author, notProcess),
 
         /**
          * Delete edge
          */
-        deleteEdge: (srcID, edgeName, dstID, author, notProcess) => handle("DELETE", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
+        deleteEdge: (srcID, edgeName, dstID, options, author, notProcess) =>
+            handle(options, "DELETE", `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`, undefined, author, notProcess),
 
         /**
          * Create audit
          */
-        createAudit: (auditLog, author) => handle("POST", "/v2/client-data/audit", auditLog, author),
+        createAudit: (auditLog, options, author) =>
+            handle(options, "POST", "/v2/client-data/audit", auditLog, author),
 
         /**
          * Check unique value
          */
-        checkUnique: value => handle("GET", `/v2/client-data/check_unique?value=${value}`),
+        checkUnique: (value, options) =>
+            handle(options, "GET", `/v2/client-data/check_unique?value=${value}`),
 
         /**
          * Handle all pages

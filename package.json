@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "main": "index.js",
   "dependencies": {
-    "@sentry/node": "^5.9.0",
+    "@sentry/node": "^5.6.2",
     "axios": "^0.19.0",
-    "elasticsearch": "^16.3.0",
+    "elasticsearch": "^12.0.1",
     "no-kafka": "^3.0.1",
+    "opentracing": "^0.14.4",
     "request": "^2.78.0",
     "restify-clients": "^2.6.7",
     "restify-errors": "^8.0.1",

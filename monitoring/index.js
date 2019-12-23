@@ -32,7 +32,7 @@ const pingMonitoring = (url, serviceName, status) =>
             result.data.TaskARN.split("/")[1]
           }`;
         } catch (e) {
-          resolve();
+          return resolve();
         }
       }
 

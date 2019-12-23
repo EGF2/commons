@@ -135,7 +135,12 @@ class Searcher {
         return query;
     }
 
-    search(options) {
+    search(options, rootSpan, tracer) {
+        let span = {
+            log: () => {},
+            finish: () => {}
+        };
+        if (rootSpan && tracer) span = tracer.startSpan("es", { childOf: rootSpan, tags: { function: "search" } });
         let query = Promise.resolve();
         return query.then(searchAfter => {
             let request = this.createRequest(options);
@@ -159,13 +164,14 @@ class Searcher {
 
             const aliases = ["roles"];
             const type = aliases.includes(options.object) ? null : options.object;
-
+            span.log({event: "start es", opt: { index: options.object, body: request }});
             return this.elastic.search({
                 index: options.object,
                 type,
                 body: request
             });
         }).then(body => {
+            span.log({event: "end es"});
             // Fix for npi search
             const returnObject = [
                 "npi_location",
@@ -182,6 +188,7 @@ class Searcher {
                     count: body.hits.total
 
                 };
+                span.finish();
                 return res;
             }
             // Regular search
@@ -193,23 +200,9 @@ class Searcher {
                 res.first = body.hits.hits[0]._source.id;
                 res.last = body.hits.hits.slice(-1)[0]._source.id;
             }
+            span.finish();
             return res;
         });
-    }
-    delete(options) {
-        if (options.ids) {
-            for (const id of options.ids) {
-                this.elastic.delete({
-                    index: options.index,
-                    type: options.index,
-                    id
-                });
-            }
-        }
-    }
-    bulkDelete(options) {
-        let bulk = options.ids.map(id => ({ delete: { _index: options.index, _type: options.index, _id: id } }) )
-        return this.elastic.bulk({body: bulk});
     }
 }
 
