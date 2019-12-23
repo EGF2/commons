@@ -179,8 +179,8 @@ function newClient(url, mode, tracer) {
         /*
          * Get aggregate
         */
-        getAggregate: (id, aggregate, options, author, v) =>
-            handle(options, "GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}&v${v}`, null, author),
+        getAggregate: (id, aggregate, options, author) =>
+            handle(options, "GET", `/v2/client-data/aggregate/${id}?aggregate=${aggregate}`, null, author),
 
         /**
          * Get object type by ID
@@ -245,7 +245,7 @@ function newClient(url, mode, tracer) {
         /**
          * Get all edges
          */
-        getAllEdges: (srcID, edgeName, options, v) => handle(options, "GET", `/v2/client-data/getAllEdges/${srcID}/${edgeName}?v=${v}`),
+        getAllEdges: (srcID, edgeName, options) => handle(options, "GET", `/v2/client-data/getAllEdges/${srcID}/${edgeName}`),
 
         /**
          * Get edges
