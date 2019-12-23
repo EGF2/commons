@@ -38,7 +38,7 @@ class clientApi {
         if (!objErr.err)
           objErr.err = { err: e, message: e.message, code: e.code };
         if (!e.message.includes("Gateway")) break;
-        await timeout(i);
+        await this.timeout(i);
         waitTime += i;
         continue;
       }
@@ -52,7 +52,7 @@ class clientApi {
       span.setTag(Tags.HTTP_URL, path || "");
       span.setTag(Tags.HTTP_METHOD, method || "");
       span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
-      tracer.inject(span, FORMAT_HTTP_HEADERS, headers);
+      this.tracer.inject(span, FORMAT_HTTP_HEADERS, headers);
     }
     if (auth) headers.authorization = `Bearer ${auth.split(" ")[1]}`;
     return headers;
