@@ -59,7 +59,7 @@ class clientApi {
   }
 
   prepareQuery(params) {
-    if(!params) return null;
+    if (!params) return null;
     let query = "";
     if (params.expand) query += `expand=${params.expand}&`;
     if (params.count) query += `count=${params.count}&`;
@@ -70,27 +70,26 @@ class clientApi {
   async getObject({ id, params, auth }) {
     if (!id) throw new Error("'id' is empty");
     let url = `/v2/client-api/graph/${id}`;
-    const query = prepareQuery(params);
+    const query = this.prepareQuery(params);
     if (query) url += `?${query}`;
-    return request({ url, method: "GET", span: params.span, auth });
+    return this.request({ url, method: "GET", span: params.span, auth });
   }
 
-  async getEdge({src, name, dst, params, auth}) {
-    if(!src || !name || !dst) throw new Error("src or dst or name is semty");
+  async getEdge({ src, name, dst, params, auth }) {
+    if (!src || !name || !dst) throw new Error("src or dst or name is semty");
     let url = `/v2/client-api/graph/${src}/${name}/${dst}`;
-    const query = prepareQuery(params);
-    if(query) url += query;
-    return request({ url, method: "GET", span: params.span, auth});
+    const query = this.prepareQuery(params);
+    if (query) url += query;
+    return this.request({ url, method: "GET", span: params.span, auth });
   }
 
-  async getEdges({src, name, params, auth}) {
-    if(!src || !name) throw new Error("src or name is semty");
+  async getEdges({ src, name, params, auth }) {
+    if (!src || !name) throw new Error("src or name is semty");
     let url = `/v2/client-api/graph/${src}/${name}`;
-    const query = prepareQuery(params);
-    if(query) url += query;
-    return request({ url, method: "GET", span: params.span, auth});
+    const query = this.prepareQuery(params);
+    if (query) url += query;
+    return this.request({ url, method: "GET", span: params.span, auth });
   }
-
 }
 
 module.exports = clientApi;
