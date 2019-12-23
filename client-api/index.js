@@ -14,7 +14,7 @@ class clientApi {
     return new Promise(res => setTimeout(res, ms));
   }
 
-  async request({ url, method, body, auht, span }) {
+  async request({ url, method, body, auth, span }) {
     let err;
     let waitTime = 0;
     const objErr = {};
@@ -29,7 +29,7 @@ class clientApi {
           method,
           url: `${this.api}${url}`,
           data: body,
-          headers: this.createHeaders({ path: url, method, span, auht })
+          headers: this.createHeaders({ path: url, method, span, auth })
         });
         if (span) span.log({ EndReq: url });
         return res.data;
@@ -71,7 +71,7 @@ class clientApi {
     if (!id) throw new Error("'id' is empty");
     let url = `/v2/client-api/graph/${id}`;
     const query = this.prepareQuery(params);
-    if (query) url += `?${query}`;
+  if (query) url += `?${query}`;
     return this.request({ url, method: "GET", span: params.span, auth });
   }
 
@@ -79,7 +79,7 @@ class clientApi {
     if (!src || !name || !dst) throw new Error("src or dst or name is semty");
     let url = `/v2/client-api/graph/${src}/${name}/${dst}`;
     const query = this.prepareQuery(params);
-    if (query) url += query;
+    if (query) url += `?${query}`;
     return this.request({ url, method: "GET", span: params.span, auth });
   }
 
@@ -87,7 +87,7 @@ class clientApi {
     if (!src || !name) throw new Error("src or name is semty");
     let url = `/v2/client-api/graph/${src}/${name}`;
     const query = this.prepareQuery(params);
-    if (query) url += query;
+    if (query) url += `?${query}`;
     return this.request({ url, method: "GET", span: params.span, auth });
   }
 }
