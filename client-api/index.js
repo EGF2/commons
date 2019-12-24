@@ -70,7 +70,7 @@ class clientApi {
 
   async getObject({ id, params, auth, user }) {
     if (!id) throw new Error("'id' is empty");
-    let url = `/v2/client-api/graph/${id}`;
+    let url = `/v2/internal/client-api/graph/${id}`;
     const query = this.prepareQuery(params);
     if (query) url += `?${query}`;
     return this.request({ url, method: "GET", span: params.span, auth, user });
@@ -78,7 +78,7 @@ class clientApi {
 
   async getEdge({ src, name, dst, params, auth, user }) {
     if (!src || !name || !dst) throw new Error("src or dst or name is semty");
-    let url = `/v2/client-api/graph/${src}/${name}/${dst}`;
+    let url = `/v2/internal/client-api/graph/${src}/${name}/${dst}`;
     const query = this.prepareQuery(params);
     if (query) url += `?${query}`;
     return this.request({ url, method: "GET", span: params.span, auth, user });
@@ -86,7 +86,7 @@ class clientApi {
 
   async getEdges({ src, name, params, auth, user }) {
     if (!src || !name) throw new Error("src or name is semty");
-    let url = `/v2/client-api/graph/${src}/${name}`;
+    let url = `/v2/internal/client-api/graph/${src}/${name}`;
     const query = this.prepareQuery(params);
     if (query) url += `?${query}`;
     return this.request({ url, method: "GET", span: params.span, auth, user });
