@@ -156,10 +156,6 @@ class Searcher {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
                 request.sort.push({ name_sort: "asc" });
             }
-            if (options.object === "zip_code") {
-                request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
-                request.sort.push({ name_sort: "asc" });
-            }
 
             const aliases = ["roles"];
             const type = aliases.includes(options.object) ? null : options.object;
