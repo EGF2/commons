@@ -161,8 +161,11 @@ class Searcher {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
                 request.sort.push({ name_sort: "asc" });
             }
+            if (options.object === "zip_code") {
+                request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
+            }
 
-            const aliases = ["roles"];
+            const aliases = ["roles",  "zip_code"];
             const type = aliases.includes(options.object) ? null : options.object;
             span.log({event: "start es", opt: { index: options.object, body: request }});
             return this.elastic.search({
