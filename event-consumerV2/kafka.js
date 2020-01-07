@@ -15,6 +15,7 @@ const handler = (eventHandler, errorHandler, consumer) => async (messageSet, top
                 partition,
                 offset: message.offset
             });
+            console.log("KAFKA OFFSET ", message.offset)
         }
     } catch (e) {
         errorHandler(e, consumer);
