@@ -93,10 +93,10 @@ function newClient(url, mode, tracer) {
                     if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return { message: new Date().toISOString() };
                 }
-                if (!e.message.includes("Gateway")) break;
+                const errors = ["Gateway", "Unavailable"];
+                if (!errors.some(error => e.message.includes(error))) break;
                 await timeout(i);
                 waitTime += i;
-                continue;
             }
         }
         if (span) {

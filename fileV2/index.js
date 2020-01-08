@@ -48,11 +48,11 @@ function newClient(url, tracer) {
         return res;
       } catch (e) {
         err = e;
-        if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code };
-        if (!e.message.includes("Gateway")) break;
+        const errors = ["Gateway", "Unavailable"];
+        if(!objErr.err) objErr.err = {err: e, message: e.message, code: e.code};
+        if (!errors.some(error => e.message.includes(error))) break;
         await timeout(i);
         waitTime += i;
-        continue;
       }
     }
     throw new Error(err);
