@@ -37,10 +37,10 @@ class clientApi {
         err = e;
         if (!objErr.err)
           objErr.err = { err: e, message: e.message, code: e.code };
-        if (!e.message.includes("Gateway")) break;
+        const errors = ["Gateway", "Unavailable"];
+        if (!errors.some(error => e.message.includes(error))) break;
         await this.timeout(i);
         waitTime += i;
-        continue;
       }
     }
     throw err;
