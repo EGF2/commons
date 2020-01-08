@@ -207,6 +207,9 @@ class Searcher {
             return res;
         });
     }
+    index(params) {
+        return this.elastic.index(params);
+    }
 }
 
 module.exports.Searcher = Searcher;
