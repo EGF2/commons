@@ -171,9 +171,6 @@ class Searcher {
                 "npi_location",
                 "npi_entity",
                 "log_line",
-                "lab_test_position_v2",
-                "lab_test_position_test2",
-                "lab_test_position_test1",
                 "waystar_payer",
                 "zip_code"];
             if (returnObject.includes(options.object)) {
