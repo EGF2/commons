@@ -30,12 +30,15 @@ const initConfig = () => {
     }
     if (!process.env) throw new Error("Not found var in env");
 
-    if(configApp.shouldVar) {
-        for(const field of configApp.shouldVar) {
+    if (configApp.shouldVar) {
+        for (const field of configApp.shouldVar) {
             if (process.env[`egf_${field}`]) config[field] = json2obj(process.env[`egf_${field}`]);
         }
-        if(Object.keys(config).length !== configApp.shouldVar.length)
-            throw new Error("Not all variables specified in shouldVar are found in env")
+        if (Object.keys(config).length !== configApp.shouldVar.length){
+            const varsInEnv = Object.keys(config) || [];
+            const delta = configApp.shouldVar.filter(varInApp => !varsInEnv.includes(varInApp));
+            throw new Error(`Not all variables specified in shouldVar are found in env: ${delta.toString()}`)
+        }
 
         delete configApp.shouldVar;
     } else console.log("WARNING. Variable 'shouldVar' in config is empty")
