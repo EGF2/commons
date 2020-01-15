@@ -1,7 +1,4 @@
 const _merge = require("lodash/merge");
-
-let config = {};
-
 /*
     This module reads variables from env with the prefix "egf_" and generates a config
     that will return as the result of the function.
@@ -11,11 +8,22 @@ let config = {};
     All other fields in config.js will be merged with the config from env, priority for env.
 */
 
+let config = {};
+
+const json2obj = str => {
+    if (!str) return false;
+    try {
+      return JSON.parse(str);
+    } catch (e) {
+      return str;
+    }
+};
+
 const initConfig = () => {
     if (Object.keys(config).length) return config;
     let configApp;
     try {
-        configApp = require("./config/config.js");
+        configApp = require(`${module.filename.split("/node_modules")[0]}/config/config.js`);
     } catch (e) {
         configApp = {};
         console.log("WARNING. Not found file config/config.js")
@@ -24,7 +32,7 @@ const initConfig = () => {
 
     if(configApp.shouldVar) {
         for(const field of configApp.shouldVar) {
-            if (process.env[`egf_${field}`]) config[field] = process.env[`egf_${field}`];
+            if (process.env[`egf_${field}`]) config[field] = json2obj(process.env[`egf_${field}`]);
         }
         if(Object.keys(config).length !== configApp.shouldVar.length)
             throw new Error("Not all variables specified in shouldVar are found in env")
