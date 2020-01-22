@@ -1,4 +1,4 @@
-const config = require("config");
+const config = require("commons/config");
 const Sentry = require("@sentry/node");
 
 Sentry.init({
@@ -25,7 +25,7 @@ class Logging {
   constructor(tag) {
     this.tag = tag;
     this.configSendtoSentry = config.sendtoSentry;
-    this.logLevel = intLevel[config.log_level];
+    this.logLevel = intLevel[config.logLevel];
   }
 
   write(data, e, sendtoSentry) {
