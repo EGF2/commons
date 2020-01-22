@@ -2,10 +2,10 @@ const config = require("commons/config");
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: config.dnsSentry,
+  dsn: config.sentry.dns,
   defaultIntegrations: false,
   debug: config.sentryDebug || false,
-  environment: process.env.NODE_ENV,
+  environment: config.sentry.env,
   serverName: config.serviceName,
   beforeSend(event) {
     if (!["dev", "stage", "prod"].includes(process.env.NODE_ENV)) return null;
