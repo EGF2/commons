@@ -40,6 +40,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         partition: 0
     }]);
     let offset = fetchOffset[0].offset;
+    console.log("CURRENT OFFSET", offset);
     if (offset > -1) {
         offset++;
     }
