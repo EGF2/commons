@@ -14,7 +14,7 @@ redisClient.on("error", err => {
   });
 
 redisClient.on("connect", err => {
-    console.log("HELLLLOOOOO", err);
+    console.log("Connect REDIS", err);
 });
 
 let _url;
@@ -210,15 +210,17 @@ function newClient(url, mode, tracer) {
          * Get object
          */
         getObject: async function (id, options, author) { //
-            object = await redisGet(id);
+            let object = await redisGet(id);
             if (!object) {
-                object = handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
+                object = await handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
                     options && options.expand ? this.expand(result, options.expand) : result);
+                console.log("==============CLIENT==============", object);
                 await redisSet(id, JSON.stringify(object));
             }
             else {
                 object = JSON.parse(object);
             }
+            console.log("+===============REDIS==========+", object);
             return object;
         },
 
@@ -243,12 +245,18 @@ function newClient(url, mode, tracer) {
         /**
          * Update object
          */
-        updateObject: (id, delta, options, author, notProcess) => handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
+        updateObject: async (id, delta, options, author, notProcess) => {
+            const object = await handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess);
+            await redisSet(id, JSON.stringify(object));
+        },
 
         /**
          * Replace object
          */
-        replaceObject: (id, object, options, author, notProcess) => handle(options, "PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
+        replaceObject: async (id, object, options, author, notProcess) => {
+            handle(options, "PUT", `/v2/client-data/graph/${id}`, object, author, notProcess);
+            await redisSet(id, JSON.stringify(object));
+        },
 
         /**
          * Delete object
