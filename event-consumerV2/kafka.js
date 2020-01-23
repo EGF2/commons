@@ -7,11 +7,10 @@ const uuid = require("uuid").v4;
  * @param errorHandler - error handler
  */
 
-const getHandler = (eventHandler, errorHandler, consumer) => async () => {
+const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
-        consumer.subscribe([config.topic]);
-        console.log(`Consumer ${consumer.name} subscribed on ${config.topic}`)
-        // noinspection InfiniteLoopJS
+        consumer.subscribe([config.kafka.topicV2]);
+        console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topicV2}`)
         while (true) {
             const data = await new Promise((resolve, reject) => {
                 consumer.consume(1, (err, data) => {
@@ -22,9 +21,7 @@ const getHandler = (eventHandler, errorHandler, consumer) => async () => {
                 });
             });
             if (data.length > 0) {
-                // new messages will start arriving after re-balance and new
-                // assignments are given to us.
-                await eventHandler(data[0]);
+                await eventHandler(data[0].value.toString());
             }
         }
     } catch (err) {
@@ -32,27 +29,27 @@ const getHandler = (eventHandler, errorHandler, consumer) => async () => {
     }
 };
 
-const onRebalance = (err, assignment) => {
-    if (err) {
-        console.log("Rebalance error: ", err);
-        process.exit(1);
-    }
-    console.log('Rebalance called. Results', assignment.map(el => el.partition).join());
-}
-
 const newConsumer = async (config, eventHandler, errorHandler) => {
     const consumer = new Kafka.KafkaConsumer({
-        'group.id': config.kafka.group,
-        'metadata.broker.list': config.kafka.host,
+        'group.id': config.kafka.group_id,
+        'metadata.broker.list': config.kafka.hosts[0],
         'auto.offset.reset': 'earliest',
         'enable.auto.commit': false,
         'enable.auto.offset.store': false,
-        'client.id': `${config.kafka.group}${uuid()}`,
-        'rebalance_cb': onRebalance,
+        'client.id': `${config.kafka.group_id}${uuid()}`,
+        'rebalance_cb': function (err, assignment) {
+            console.log('Rebalance called. Results', assignment.map(e => e.partition).join());
+            if (err.code === Kafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
+                this.assign(assignment);
+            } else if (err.code == Kafka.CODES.ERRORS.ERR__REVOKE_PARTITIONS) {
+                this.unassign();
+            } else {
+                console.error(err);
+            }
+        },
     });
-    const handler = getHandler(eventHandler, errorHandler, consumer);
+    const handler = getHandler(config, eventHandler, errorHandler, consumer);
 
-    // Connect the consumer.
     consumer.connect({ timeout: "1000ms" }, (err) => {
         if (err) {
             console.log(`Error connecting to Kafka broker: `, err);
