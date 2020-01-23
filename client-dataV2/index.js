@@ -3,7 +3,22 @@
 const restify = require("restify-clients");
 const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
 const axios = require("axios");
+const redis = require("redis");
+const redisClient = redis.createClient({ host: "dev-cache.i36rld.0001.use1.cache.amazonaws.com", port:"6379"});
+const { promisify } = require("util");
+const redisGet = promisify(redisClient.get).bind(redisClient);
+const redisSet = promisify(redisClient.set).bind(redisClient);
+
+redisClient.on("error", err => {
+    console.log("Error: ", err);
+  });
+
+redisClient.on("connect", err => {
+    console.log("HELLLLOOOOO", err);
+});
+
 let _url;
+
 
 function newClient(url, mode, tracer) {
     _url = url;
@@ -194,10 +209,17 @@ function newClient(url, mode, tracer) {
         /**
          * Get object
          */
-        getObject: function (id, options, author) {
-            return handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
-                options && options.expand ? this.expand(result, options.expand) : result
-            );
+        getObject: async function (id, options, author) { //
+            object = await redisGet(id);
+            if (!object) {
+                object = handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
+                    options && options.expand ? this.expand(result, options.expand) : result);
+                await redisSet(id, JSON.stringify(object));
+            }
+            else {
+                object = JSON.parse(object);
+            }
+            return object;
         },
 
         /**
