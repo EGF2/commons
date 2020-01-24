@@ -7,14 +7,13 @@ const redis = require("redis");
 const redisClient = redis.createClient({ host: "dev-cache.i36rld.0001.use1.cache.amazonaws.com", port:"6379"});
 const { promisify } = require("util");
 const redisGet = promisify(redisClient.get).bind(redisClient);
-const redisSet = promisify(redisClient.set).bind(redisClient);
 
 redisClient.on("error", err => {
     console.log("Error: ", err);
   });
 
-redisClient.on("connect", err => {
-    console.log("Connect REDIS", err);
+redisClient.on("connect", () => {
+    console.log("Connect REDIS");
 });
 
 let _url;
@@ -212,15 +211,13 @@ function newClient(url, mode, tracer) {
         getObject: async function (id, options, author) { //
             let object = await redisGet(id);
             if (!object) {
-                object = await handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
-                    options && options.expand ? this.expand(result, options.expand) : result);
-                console.log("==============CLIENT==============", object);
-                await redisSet(id, JSON.stringify(object));
+                object = await handle(options, "GET", `/v2/client-data/graph/${id}`, "", author)
+                    .then(result => options && options.expand ? this.expand(result, options.expand) : result);
             }
             else {
                 object = JSON.parse(object);
             }
-            console.log("+===============REDIS==========+", object);
+            console.log("+===============REDIS===============+", object);
             return object;
         },
 
@@ -245,18 +242,12 @@ function newClient(url, mode, tracer) {
         /**
          * Update object
          */
-        updateObject: async (id, delta, options, author, notProcess) => {
-            const object = await handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess);
-            await redisSet(id, JSON.stringify(object));
-        },
+        updateObject: (id, delta, options, author, notProcess) =>  handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
 
         /**
          * Replace object
          */
-        replaceObject: async (id, object, options, author, notProcess) => {
-            handle(options, "PUT", `/v2/client-data/graph/${id}`, object, author, notProcess);
-            await redisSet(id, JSON.stringify(object));
-        },
+        replaceObject: (id, object, options, author, notProcess) => handle(options, "PUT", `/v2/client-data/graph/${id}`, object, author, notProcess),
 
         /**
          * Delete object
