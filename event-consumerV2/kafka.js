@@ -31,12 +31,12 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
 
 const newConsumer = async (config, eventHandler, errorHandler) => {
     const consumer = new Kafka.KafkaConsumer({
-        'group.id': config.kafka.group_id,
+        'group.id': config.kafka.groupId,
         'metadata.broker.list': config.kafka.hosts[0],
         'auto.offset.reset': 'earliest',
         'enable.auto.commit': false,
         'enable.auto.offset.store': false,
-        'client.id': `${config.kafka.group_id}${uuid()}`,
+        'client.id': `${config.kafka.groupId}${uuid()}`,
         'rebalance_cb': function (err, assignment) {
             console.log('Rebalance called. Results', assignment.map(e => e.partition).join());
             if (err.code === Kafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
