@@ -137,8 +137,8 @@ class Searcher {
 
     search(options, rootSpan, tracer) {
         let span = {
-            log: () => {},
-            finish: () => {}
+            log: () => { },
+            finish: () => { }
         };
         if (rootSpan && tracer) span = tracer.startSpan("es", { childOf: rootSpan, tags: { function: "search" } });
         let query = Promise.resolve();
@@ -165,16 +165,21 @@ class Searcher {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
             }
 
-            const aliases = ["roles",  "zip_code"];
+            const aliases = ["roles", "zip_code"];
             const type = aliases.includes(options.object) ? null : options.object;
-            span.log({event: "start es", opt: { index: options.object, body: request }});
+            span.log({ event: "start es", opt: { index: options.object, body: request } });
+            if (options.object === "practice_location")
+                console.log("SEARCHING!!!!!!!!!!!!", options.object, type, request)
+
             return this.elastic.search({
                 index: options.object,
                 type,
                 body: request
             });
         }).then(body => {
-            span.log({event: "end es"});
+            span.log({ event: "end es" });
+            if (options.object === "practice_location")
+                console.log("SEARCHING END ES!!!!!!!!!!!!", options.object, type, request)
             // Fix for npi search
             const returnObject = [
                 "npi_location",
