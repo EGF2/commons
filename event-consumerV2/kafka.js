@@ -9,8 +9,8 @@ const uuid = require("uuid").v4;
 
 const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
-        consumer.subscribe([config.kafka.topicV2]);
-        console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topicV2}`)
+        consumer.subscribe([config.kafka.topic]);
+        console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
         while (true) {
             const data = await new Promise((resolve, reject) => {
                 consumer.consume(1, (err, data) => {
