@@ -21,7 +21,7 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                 });
             });
             if (data.length > 0) {
-                await eventHandler(data[0].value.toString());
+                await eventHandler(JSON.parse(data[0].value.toString()));
             }
         }
     } catch (err) {
