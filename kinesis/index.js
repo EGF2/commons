@@ -1,6 +1,30 @@
 "use strict";
 const AWS = require("aws-sdk");
 
+const getProccesor = (eventHandler, errorHandler) => (err, shardIteratordata) => {
+    if (err) {
+        console.log("Kinesis: Error get shard iteration", err);
+        process.exit(1)
+    }
+    console.log("Kinesis: Get shard iteration successfully");
+    let iteration = shardIteratordata.ShardIterator
+    while (iteration) {
+        iteration = await new Promise((resolve, reject) => {
+            kinesis.getRecords({ShardIterator: iteration},
+                async (err, recordsData) => {
+                    try {
+                        if (err) reject(err);
+                        await eventHandler(recordsData.Records.map(record => JSON.parse(record.Data.toString('utf-8'))));
+                        resolve(recordsData.NextShardIterator);
+                    } catch (e) {
+                        errorHandler(e);
+                    }
+                },
+            );
+        })
+    }
+}
+
 const newConsumer = async (config, eventHandler, errorHandler) => {
     try {
         const kinesis = new AWS.Kinesis({
@@ -8,10 +32,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         });
 
         const stream = await new Promise(async (resolve, reject) => {
-            kinesis.describeStream(
-                {
-                    StreamName: config.kinesisStream,
-                },
+            kinesis.describeStream({ StreamName: config.kinesisStream },
                 (err, streamData) => {
                     if (err) {
                         console.log("Kinesis: Error describe Stream successfully");
@@ -30,32 +51,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                     ShardIteratorType: "TRIM_HORIZON",
                     StreamName: config.kinesisStream,
                 },
-                (err, shardIteratordata) => {
-                    if (err) {
-                        console.log("Kinesis: Error get shard iteration", err);
-                    } else {
-                        console.log("Kinesis: Get shard iteration successfully");
-                        let iteration = shardIteratordata.ShardIterator
-                        while(iteration) {
-                            iteration = await new Promise((resolve, reject) => {
-                                kinesis.getRecords(
-                                    {
-                                        ShardIterator: iteration,
-                                    },
-                                    async (err, recordsData) => {
-                                        try {
-                                            if (err) reject(err);
-                                            await eventHandler(recordsData.Records.map(record => JSON.parse(record.Data.toString('utf-8'))));
-                                            resolve(recordsData.NextShardIterator);
-                                        } catch (e) {
-                                            errorHandler(e);
-                                        }
-                                    },
-                                );
-                            })
-                        }
-                    }
-                },
+                getProccesor(eventHandler, errorHandler),
             );
         });
     } catch (error) {
