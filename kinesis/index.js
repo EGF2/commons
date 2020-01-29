@@ -45,7 +45,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                                     async (err, recordsData) => {
                                         try {
                                             if (err) reject(err);
-                                            await Promise.all(recordsData.Records.map(record => await eventHandler(JSON.parse(record.Data.toString('utf-8')))));
+                                            await eventHandler(recordsData.Records.map(record => JSON.parse(record.Data.toString('utf-8'))));
                                             resolve(recordsData.NextShardIterator);
                                         } catch (e) {
                                             errorHandler(e);
