@@ -33,7 +33,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     const consumer = new Kafka.KafkaConsumer({
         'group.id': config.kafka.groupId,
         'metadata.broker.list': config.kafka.hosts[0],
-        'auto.offset.reset': 'earliest',
+        'auto.offset.reset': 'smallest',
         'enable.auto.commit': false,
         'enable.auto.offset.store': false,
         'client.id': `${config.kafka.groupId}${uuid()}`,
