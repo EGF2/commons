@@ -1,7 +1,7 @@
 "use strict";
 const AWS = require("aws-sdk");
 
-const getProccesor = (eventHandler, errorHandler) => (err, shardIteratordata) => {
+const getProccesor = (eventHandler, errorHandler) => async (err, shardIteratordata) => {
     if (err) {
         console.log("Kinesis: Error get shard iteration", err);
         process.exit(1)
