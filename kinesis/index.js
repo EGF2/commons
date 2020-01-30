@@ -1,7 +1,7 @@
 "use strict";
 const AWS = require("aws-sdk");
 
-const getProccesor = (eventHandler, errorHandler) => async (err, shardIteratordata) => {
+const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardIteratordata) => {
     if (err) {
         console.log("Kinesis: Error get shard iteration", err);
         process.exit(1)
@@ -9,6 +9,7 @@ const getProccesor = (eventHandler, errorHandler) => async (err, shardIteratorda
     console.log("Kinesis: Get shard iteration successfully");
     let iteration = shardIteratordata.ShardIterator
     while (iteration) {
+        // eslint-disable-next-line no-loop-func
         iteration = await new Promise((resolve, reject) => {
             kinesis.getRecords({ShardIterator: iteration},
                 async (err, recordsData) => {
@@ -51,7 +52,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                     ShardIteratorType: "TRIM_HORIZON",
                     StreamName: config.kinesisStream,
                 },
-                getProccesor(eventHandler, errorHandler),
+                getProccesor(kinesis, eventHandler, errorHandler),
             );
         });
     } catch (error) {
