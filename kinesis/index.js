@@ -15,8 +15,9 @@ const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardI
                     async (err, recordsData) => {
                         try {
                             if (err) reject(err);
+                            if (!recordsData) return resolve(null);
                             await eventHandler(recordsData.Records.map(record => JSON.parse(record.Data.toString('utf-8'))));
-                            resolve(recordsData ? recordsData.NextShardIterator : null);
+                            resolve(recordsData.NextShardIterator);
                         } catch (e) {
                             errorHandler(e);
                         }
