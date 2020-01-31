@@ -25,7 +25,7 @@ const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardI
                 );
             });
         } catch (error) {
-            if (!err.retryable) errorHandler(error)
+            if (!error.retryable) errorHandler(error)
         }
     }
 }
