@@ -1,4 +1,3 @@
-"use strict";
 const AWS = require("aws-sdk");
 
 const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardIteratordata) => {
@@ -9,20 +8,24 @@ const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardI
     console.log("Kinesis: Get shard iteration successfully");
     let iteration = shardIteratordata.ShardIterator
     while (iteration) {
-        // eslint-disable-next-line no-loop-func
-        iteration = await new Promise((resolve, reject) => {
-            kinesis.getRecords({ShardIterator: iteration},
-                async (err, recordsData) => {
-                    try {
-                        if (err) reject(err);
-                        await eventHandler(recordsData.Records.map(record => JSON.parse(record.Data.toString('utf-8'))));
-                        resolve(recordsData.NextShardIterator);
-                    } catch (e) {
-                        errorHandler(e);
-                    }
-                },
-            );
-        })
+        try {
+            // eslint-disable-next-line no-loop-func
+            iteration = await new Promise((resolve, reject) => {
+                kinesis.getRecords({ ShardIterator: iteration },
+                    async (err, recordsData) => {
+                        try {
+                            if (err) reject(err);
+                            await eventHandler(recordsData.Records.map(record => JSON.parse(record.Data.toString('utf-8'))));
+                            resolve(recordsData ? recordsData.NextShardIterator : null);
+                        } catch (e) {
+                            errorHandler(e);
+                        }
+                    },
+                );
+            });
+        } catch (error) {
+            if (!err.retryable) errorHandler(error)
+        }
     }
 }
 
