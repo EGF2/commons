@@ -20,8 +20,13 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                     resolve(data)
                 });
             });
-            if (data.length > 0) {
-                await eventHandler(data[0].value.toString());
+            if (data.length) {
+                let message = data[0];
+                await eventHandler(JSON.parse(message.value.toString()));
+                consumer.commit(
+                    { topic: message.topic, partition: message.partition, offset: message.offset },
+                    function (err, data) { }
+                );
             }
         }
     } catch (err) {
