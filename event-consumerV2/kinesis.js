@@ -1,6 +1,6 @@
 const AWS = require("aws-sdk");
 
-const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardIteratordata) => {
+const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err, shardIteratordata) => {
     if (err) {
         console.log("Kinesis: Error get shard iteration", err);
         process.exit(1)
@@ -33,7 +33,7 @@ const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardI
                             // processing groups
                             for (const type of Object.keys(groups)) {
                                 const events = groups[type];
-                                await eventHandler(events);
+                                await eventHandler(events, type);
                             }
                             resolve(recordsData.NextShardIterator);
                         } catch (e) {
@@ -74,7 +74,7 @@ module.exports = async (config, eventHandler, errorHandler) => {
                     ShardIteratorType: "TRIM_HORIZON",
                     StreamName: config.kinesisStream,
                 },
-                getProccesor(kinesis, eventHandler, errorHandler),
+                getProccesor(kinesis, config, eventHandler, errorHandler),
             );
         });
     } catch (error) {
