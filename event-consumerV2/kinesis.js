@@ -6,12 +6,14 @@ const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardI
         process.exit(1)
     }
     console.log("Kinesis: Get shard iteration successfully");
+    const LIMIT = config.kinesisLimit || null;
+    if (!LIMIT) console.log("WARNING! Kinesis limit not set in config");
     let iteration = shardIteratordata.ShardIterator
     while (iteration) {
         try {
             // eslint-disable-next-line no-loop-func
             iteration = await new Promise((resolve, reject) => {
-                kinesis.getRecords({ ShardIterator: iteration },
+                kinesis.getRecords({ ShardIterator: iteration, LIMIT },
                     async (err, recordsData) => {
                         try {
                             if (err) reject(err);
