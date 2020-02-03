@@ -27,12 +27,8 @@ const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err
                                     id: "seed",
                                     seed: true,
                                     method: "POST",
+                                    ...message
                                 }
-
-                                if (message.object_type) {
-                                    event.current = message;
-                                    event.object = message.id;
-                                } else event.edge = message;
 
                                 const type = event.current ? event.current.object_type : `${event.edge.src}/${event.edge.edgeName}`
                                 groups[type]
