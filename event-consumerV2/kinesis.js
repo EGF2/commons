@@ -22,7 +22,17 @@ const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err
                             // to group the events by type
                             const groups = {};
                             recordsData.Records.forEach(record => {
-                                let event = JSON.parse(record.Data.toString('utf-8'));
+                                const message = JSON.parse(record.Data.toString('utf-8'));
+                                const event = {
+                                    id: "seed",
+                                    seed: true,
+                                    method: "POST",
+                                }
+
+                                if (message.object_type) {
+                                    event.current = message;
+                                    event.object = message.id;
+                                } else event.edge = message;
 
                                 const type = event.current ? event.current.object_type : `${event.edge.src}/${event.edge.edgeName}`
                                 groups[type]
