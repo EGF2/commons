@@ -68,7 +68,7 @@ class Client {
         path: `/v2/internal/auth/session?token=${token}`,
         headers: {}
       };
-      if (span) {
+      if (span && !span.fake) {
         span.setTag(Tags.HTTP_URL, params.path);
         span.setTag(Tags.HTTP_METHOD, "GET");
         span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
@@ -97,7 +97,7 @@ class Client {
       path: "/v2/internal/auth/register",
       headers: {}
     };
-    if (span) {
+    if (span && !span.fake) {
       span.setTag(Tags.HTTP_URL, params.path);
       span.setTag(Tags.HTTP_METHOD, "GET");
       span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
@@ -129,6 +129,7 @@ function handler(url, allowPublicAccess, tracer) {
         setTag: () => {},
         log: () => {},
         finish: () => {},
+        fake: true,
       };
     } else {
       span = tracer.startSpan("checkAuth", {
