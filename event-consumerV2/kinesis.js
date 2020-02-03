@@ -16,7 +16,23 @@ const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardI
                         try {
                             if (err) reject(err);
                             if (!recordsData) return resolve(null);
-                            await eventHandler(recordsData.Records.map(record => JSON.parse(record.Data.toString('utf-8'))));
+
+                            // to group the events by type
+                            const groups = {};
+                            recordsData.Records.forEach(record => {
+                                let event = JSON.parse(record.Data.toString('utf-8'));
+
+                                const type = event.current ? event.current.object_type : `${event.edge.src}/${event.edge.edgeName}`
+                                groups[type]
+                                    ? groups[type].push(event)
+                                    : groups[type] = [event];
+                            });
+
+                            // processing groups
+                            for (const type of Object.keys(groups)) {
+                                const events = groups[type];
+                                await eventHandler(events);
+                            }
                             resolve(recordsData.NextShardIterator);
                         } catch (e) {
                             errorHandler(e);
@@ -30,7 +46,7 @@ const getProccesor = (kinesis, eventHandler, errorHandler) => async (err, shardI
     }
 }
 
-const newConsumer = async (config, eventHandler, errorHandler) => {
+module.exports = async (config, eventHandler, errorHandler) => {
     try {
         const kinesis = new AWS.Kinesis({
             region: "us-east-1",
@@ -63,7 +79,4 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         console.log("Kinesis error: ", error);
         process.exit(1);
     }
-}
-
-module.exports = newConsumer;
-
+};
