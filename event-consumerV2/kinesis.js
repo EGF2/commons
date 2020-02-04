@@ -22,25 +22,24 @@ const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err
                             // to group the events by type
                             const groups = {};
                             recordsData.Records.forEach(record => {
-                                const message = JSON.parse(record.Data.toString('utf-8'));
-                                const event = {
-                                    id: "seed",
-                                    seed: true,
-                                    method: "POST",
-                                    ...message
-                                }
+                                const event = JSON.parse(record.Data.toString('utf-8'));
+                                const type = event.current
+                                    ? event.current.object_type
+                                    : event.edge ? `${event.edge.src}/${event.edge.edgeName}` : "system";
 
-                                const type = event.current ? event.current.object_type : `${event.edge.src}/${event.edge.edgeName}`
-                                groups[type]
+                                if (type === "system") systemMessages.push(event);
+                                else groups[type]
                                     ? groups[type].push(event)
                                     : groups[type] = [event];
                             });
 
                             // processing groups
-                            for (const type of Object.keys(groups)) {
+                            for (const type in groups) {
                                 const events = groups[type];
                                 await eventHandler(events, type);
                             }
+
+                            systemMessages.forEach(message => console.log("System: ", JSON.stringify(message)));
                             resolve(recordsData.NextShardIterator);
                         } catch (e) {
                             errorHandler(e);
