@@ -18,6 +18,7 @@ const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err
                         try {
                             if (err) reject(err);
                             if (!recordsData) return resolve(null);
+                            if (!config.start) config.start = new Date();
                             const systemMessages = [];
 
                             // to group the events by type
@@ -40,7 +41,10 @@ const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err
                                 await eventHandler(events, type);
                             }
 
-                            systemMessages.forEach(message => console.log("System: ", JSON.stringify(message)));
+                            systemMessages.forEach(message => {
+                                console.log("System: ", JSON.stringify(message));
+                                console.log("END TIME", config.start - new Date());
+                            });
                             resolve(recordsData.NextShardIterator);
                         } catch (e) {
                             errorHandler(e);
