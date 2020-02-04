@@ -43,7 +43,7 @@ const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err
 
                             systemMessages.forEach(message => {
                                 console.log("System: ", JSON.stringify(message));
-                                console.log("END TIME", config.start - new Date());
+                                console.log("END TIME", (new Date() - config.start) / (1000 * 60), "m");
                             });
                             resolve(recordsData.NextShardIterator);
                         } catch (e) {
@@ -81,7 +81,7 @@ module.exports = async (config, eventHandler, errorHandler) => {
             kinesis.getShardIterator(
                 {
                     ShardId: shard.ShardId,
-                    ShardIteratorType: "TRIM_HORIZON",
+                    ShardIteratorType: "LATEST",
                     StreamName: config.kinesisStream,
                 },
                 getProccesor(kinesis, config, eventHandler, errorHandler),
