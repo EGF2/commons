@@ -18,6 +18,7 @@ const getProccesor = (kinesis, config, eventHandler, errorHandler) => async (err
                         try {
                             if (err) reject(err);
                             if (!recordsData) return resolve(null);
+                            const systemMessages = [];
 
                             // to group the events by type
                             const groups = {};
