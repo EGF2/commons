@@ -25,7 +25,8 @@ class Logging {
   constructor(tag) {
     this.tag = tag;
     this.configSendtoSentry = config.sendtoSentry;
-    this.logLevel = intLevel[config.logLevel || config.log_level] ;
+    // this.logLevel = intLevel[config.logLevel || config.log_level] ;
+    this.logLevel = intLevel["info"] ;
   }
 
   write(data, e, sendtoSentry) {
