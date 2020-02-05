@@ -41,7 +41,10 @@ const initConfig = () => {
         }
 
         delete configApp.shouldVar;
-    } else console.log("WARNING. Variable 'shouldVar' in config is empty")
+    } else {
+        console.log("WARNING. Variable 'shouldVar' in config is empty")
+        return {};
+    }
 
 
     if (Object.keys(configApp).length) config = _merge(configApp, config);
