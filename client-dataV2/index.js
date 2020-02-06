@@ -4,7 +4,7 @@ const restify = require("restify-clients");
 const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
 const axios = require("axios");
 const redis = require("redis");
-const config = require("config");
+const config = require("commons/config");
 
 const options = config.redis.split(":");
 const redisClient = redis.createClient({ host: options[0], port: options[1] });
