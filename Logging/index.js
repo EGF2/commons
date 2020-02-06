@@ -1,11 +1,11 @@
-const config = require("config");
+const config = require("commons/config");
 const Sentry = require("@sentry/node");
 
 Sentry.init({
-  dsn: "https://3ae99f681a2045b7ba3f4c1fde633f8f@sentry.io/1417634",
+  dsn: config.sentry.dns,
   defaultIntegrations: false,
   debug: config.sentryDebug || false,
-  environment: process.env.NODE_ENV,
+  environment: config.sentry.env,
   serverName: config.serviceName,
   beforeSend(event) {
     if (!["dev", "stage", "prod"].includes(process.env.NODE_ENV)) return null;
@@ -25,7 +25,7 @@ class Logging {
   constructor(tag) {
     this.tag = tag;
     this.configSendtoSentry = config.sendtoSentry;
-    this.logLevel = intLevel[config.log_level];
+    this.logLevel = intLevel[config.logLevel];
   }
 
   write(data, e, sendtoSentry) {
