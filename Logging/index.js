@@ -13,7 +13,7 @@ Sentry.init({
     return event;
   },
 });
-
+ 
 const intLevel = {
   debug: 1,
   info: 2,
