@@ -4,6 +4,8 @@ const restify = require("restify-clients");
 const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
 const axios = require("axios");
 let _url;
+const Logging = require("../Logging");
+const Log = new Logging(require.main.filename);
 
 function newClient(url, mode, tracer) {
     _url = url;
@@ -93,7 +95,7 @@ function newClient(url, mode, tracer) {
                     if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return { message: new Date().toISOString() };
                 }
-                if (!e.message.includes("Gateway")) break;
+                //if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
                 continue;
@@ -108,7 +110,8 @@ function newClient(url, mode, tracer) {
                 err
             });
         }
-
+        const{ span: trash, ...params} = option;
+        Log.error("CLIENTDATAERROR5XX", { err }, { params, method, path, body });
         throw err;
     };
 
