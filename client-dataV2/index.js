@@ -111,7 +111,8 @@ function newClient(url, mode, tracer) {
             });
         }
         const{ span: trash, ...params} = option;
-        Log.error("CLIENTDATAERROR5XX", { err }, { params, method, path, body });
+        console.log("CLIENTDATAERROR5XX",  JSON.stringify({ option, method, path, body }));
+        console.log("CLIENTDATAERROR5XX", JSON.stringify({ message: err.message, body: err.body, response: err.response }));
         throw err;
     };
 
