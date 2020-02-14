@@ -37,12 +37,14 @@ class clientApi {
         err = e;
         if (!objErr.err)
           objErr.err = { err: e, message: e.message, code: e.code };
-        if (!e.message.includes("Gateway")) break;
+        //if (!e.message.includes("Gateway")) break;
         await this.timeout(i);
         waitTime += i;
         continue;
       }
     }
+    console.log("CLIENTDATAERROR5XX",  JSON.stringify({ url, method, body, auth }));
+    console.log("CLIENTDATAERROR5XX", JSON.stringify({ message: err.message, body: err.body, response: err.response }));
     throw err;
   }
 
