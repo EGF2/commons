@@ -44,7 +44,10 @@ class clientApi {
       }
     }
     console.log("apierror",  JSON.stringify({ url, method, body, auth }));
-    console.log("apierror", JSON.stringify({ message: err.message, body: err.body, response: err.response }));
+    console.log("apierror", err.message);
+    console.log("apierror", err.body);
+    console.log("apierror", err.response);
+    console.log("-----------------------------");
     throw err;
   }
 
