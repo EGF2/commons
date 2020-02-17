@@ -112,9 +112,7 @@ function newClient(url, mode, tracer) {
         }
         const { span: trash, ...params} = option;
         console.log("dataerror",  JSON.stringify({ params, method, path, body }));
-        console.log("dataerror", err.message );
-        console.log("dataerror", err.body );
-        console.log("dataerror", err.response);
+        console.log("dataerror", err );
         console.log("----------------------------");
         throw err;
     };
