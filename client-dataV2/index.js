@@ -95,7 +95,7 @@ function newClient(url, mode, tracer) {
                     if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return { message: new Date().toISOString() };
                 }
-                //if (!e.message.includes("Gateway")) break;
+                if (!e.message.includes("Gateway")) break;
                 await timeout(i);
                 waitTime += i;
                 continue;
@@ -110,9 +110,9 @@ function newClient(url, mode, tracer) {
                 err
             });
         }
-        const{ span: trash, ...params} = option;
-        console.log("CLIENTDATAERROR5XX",  JSON.stringify({ option, method, path, body }));
-        console.log("CLIENTDATAERROR5XX", JSON.stringify({ message: err.message, body: err.body, response: err.response }));
+        const { span: trash, ...params} = option;
+        console.log("dataerror",  JSON.stringify({ params, method, path, body }));
+        console.log("dataerror", JSON.stringify({ message: err.message, body: err.body, response: err.response }));
         throw err;
     };
 
