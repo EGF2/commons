@@ -37,8 +37,13 @@ class clientApi {
         err = e;
         if (!objErr.err)
           objErr.err = { err: e, message: e.message, code: e.code };
+        let messageError = "";
+        if (e.response && e.response.data && e.response.data.message)
+          messageError = e.response.data.message;
+        else messageError = e.message;
+
         const errors = ["Gateway", "Unavailable"];
-        if (!errors.some(error => e.message.includes(error))) break;
+        if (!errors.some(error => messageError.includes(error))) break;
         await this.timeout(i);
         waitTime += i;
       }
