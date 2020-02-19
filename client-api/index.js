@@ -5,9 +5,9 @@ class clientApi {
   constructor(api, tracer) {
     this.api = api;
     this.tracer = tracer;
-    this.startTimeout = 5;
-    this.deltaInterval = 20;
-    this.maxTimeout = 3500;
+    this.startTimeout = 250;
+    this.deltaInterval = 250;
+    this.maxTimeout = 10000;
   }
 
   async timeout(ms) {
