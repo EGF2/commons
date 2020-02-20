@@ -11,6 +11,7 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
     try {
         consumer.subscribe([config.kafka.topic]);
         console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
+
         while (true) {
             const data = await new Promise((resolve, reject) => {
                 consumer.consume(1, (err, data) => {
@@ -21,12 +22,9 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                 });
             });
             if (data.length) {
-                let message = data[0];
+                const message = data[0];
                 await eventHandler(JSON.parse(message.value.toString()));
-                consumer.commit(
-                    { topic: message.topic, partition: message.partition, offset: message.offset },
-                    function (err, data) { }
-                );
+                consumer.commitMessage(message);
             }
         }
     } catch (err) {
@@ -38,8 +36,6 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
     const consumer = new Kafka.KafkaConsumer({
         'group.id': config.kafka.groupId,
         'metadata.broker.list': config.kafka.hosts[0],
-        'auto.offset.reset': 'smallest',
-        'enable.auto.commit': false,
         'enable.auto.offset.store': false,
         'client.id': `${config.kafka.groupId}${uuid()}`,
         'rebalance_cb': function (err, assignment) {
@@ -52,7 +48,10 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 console.error(err);
             }
         },
-    });
+    },
+        {
+            'auto.offset.reset': 'earliest',
+        });
     const handler = getHandler(config, eventHandler, errorHandler, consumer);
 
     consumer.connect({ timeout: "1000ms" }, (err) => {
