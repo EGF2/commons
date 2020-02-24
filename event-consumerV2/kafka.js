@@ -21,7 +21,6 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                     resolve(data)
                 });
             });
-            console.log(data)
             if (data.length) {
                 const message = data[0];
                 await eventHandler(JSON.parse(message.value.toString()));
