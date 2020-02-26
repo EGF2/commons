@@ -3,7 +3,28 @@
 const restify = require("restify-clients");
 const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
 const axios = require("axios");
+const redis = require("redis");
+const config = require("commons/config");
+const Logging = require("../Logging");
+
+const options = config.redis.split(":");
+const redisClient = redis.createClient({ host: options[0], port: options[1] });
+const { promisify } = require("util");
+const redisGet = promisify(redisClient.get).bind(redisClient);
+
+const Log = new Logging(require.main.filename);
+
+redisClient.on("error", err => {
+    Log.error("Error: ", err);
+  });
+
+redisClient.on("connect", () => {
+    Log.info("Connect to REDIS");
+});
+
+
 let _url;
+
 
 function newClient(url, mode, tracer) {
     _url = url;
@@ -194,10 +215,21 @@ function newClient(url, mode, tracer) {
         /**
          * Get object
          */
-        getObject: function (id, options, author) {
-            return handle(options, "GET", `/v2/client-data/graph/${id}`, "", author).then(result =>
-                options && options.expand ? this.expand(result, options.expand) : result
-            );
+        getObject: async function (id, options, author) { //
+            let object = null;
+            try {
+                object = await redisGet(id);
+            } catch (error) {
+                Log.warning("Redis request fail", { message: error.message, params: req.params });
+              }
+            if (!object) {
+                object = await handle(options, "GET", `/v2/client-data/graph/${id}`, "", author)
+                    .then(result => options && options.expand ? this.expand(result, options.expand) : result);
+            }
+            else {
+                object = JSON.parse(object);
+            }
+            return object;
         },
 
         /**
@@ -221,7 +253,7 @@ function newClient(url, mode, tracer) {
         /**
          * Update object
          */
-        updateObject: (id, delta, options, author, notProcess) => handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
+        updateObject: (id, delta, options, author, notProcess) =>  handle(options, "PATCH", `/v2/client-data/graph/${id}`, delta, author, notProcess),
 
         /**
          * Replace object

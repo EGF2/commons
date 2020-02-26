@@ -5,9 +5,9 @@ class clientApi {
   constructor(api, tracer) {
     this.api = api;
     this.tracer = tracer;
-    this.startTimeout = 5;
-    this.deltaInterval = 20;
-    this.maxTimeout = 3500;
+    this.startTimeout = 250;
+    this.deltaInterval = 250;
+    this.maxTimeout = 10000;
   }
 
   async timeout(ms) {
@@ -37,8 +37,13 @@ class clientApi {
         err = e;
         if (!objErr.err)
           objErr.err = { err: e, message: e.message, code: e.code };
+        let messageError = "";
+        if (e.response && e.response.data && e.response.data.message)
+          messageError = e.response.data.message;
+        else messageError = e.message;
+
         const errors = ["Gateway", "Unavailable"];
-        if (!errors.some(error => e.message.includes(error))) break;
+        if (!errors.some(error => messageError.includes(error))) break;
         await this.timeout(i);
         waitTime += i;
       }
