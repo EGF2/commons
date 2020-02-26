@@ -1,18 +1,18 @@
-const config = require("config");
+const config = require("commons/config");
 const Sentry = require("@sentry/node");
 
-Sentry.init({
-  dsn: "https://3ae99f681a2045b7ba3f4c1fde633f8f@sentry.io/1417634",
-  defaultIntegrations: false,
-  debug: config.sentryDebug || false,
-  environment: process.env.NODE_ENV,
-  serverName: config.serviceName,
-  beforeSend(event) {
-    if (!["dev", "stage", "prod"].includes(process.env.NODE_ENV)) return null;
-    if (event.message) return event.message.match(/SentryError: HTTP Error \(429\)/) ? null : event;
-    return event;
-  },
-});
+// Sentry.init({
+//   dsn: config.sentry.dns,
+//   defaultIntegrations: false,
+//   debug: config.sentryDebug || false,
+//   environment: config.sentry.env,
+//   serverName: config.serviceName,
+//   beforeSend(event) {
+//     if (!["dev", "stage", "prod"].includes(process.env.NODE_ENV)) return null;
+//     if (event.message) return event.message.match(/SentryError: HTTP Error \(429\)/) ? null : event;
+//     return event;
+//   },
+// });
 
 const intLevel = {
   debug: 1,
@@ -25,7 +25,8 @@ class Logging {
   constructor(tag) {
     this.tag = tag;
     this.configSendtoSentry = config.sendtoSentry;
-    this.logLevel = intLevel[config.log_level];
+    // this.logLevel = intLevel[config.logLevel || config.log_level] ;
+    this.logLevel = intLevel["info"] ;
   }
 
   write(data, e, sendtoSentry) {
@@ -33,13 +34,13 @@ class Logging {
 
     if (this.configSendtoSentry && sendtoSentry) {
       const user = data.params && data.params.user;
-      Sentry.configureScope(async scope => {
-        scope.setTag("service", config.serviceName);
-        scope.setUser({ id: user });
-        scope.setLevel(data.level);
-        Sentry.addBreadcrumb({ message: data.message });
-        Sentry.captureException(e || new Error());
-      });
+      // Sentry.configureScope(async scope => {
+      //   scope.setTag("service", config.serviceName);
+      //   scope.setUser({ id: user });
+      //   scope.setLevel(data.level);
+      //   Sentry.addBreadcrumb({ message: data.message });
+      //   Sentry.captureException(e || new Error());
+      // });
     }
   }
 
