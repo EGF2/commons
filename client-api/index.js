@@ -5,48 +5,39 @@ class clientApi {
   constructor(api, tracer) {
     this.api = api;
     this.tracer = tracer;
-    this.startTimeout = 5;
-    this.deltaInterval = 20;
-    this.maxTimeout = 3500;
+    this.startTimeout = 200;
+    this.deltaInterval = 150;
+    this.maxTimeout = 10000;
   }
 
   async timeout(ms) {
     return new Promise(res => setTimeout(res, ms));
   }
 
-  async request({ url, method, body, auth, span, user }) {
-    let err;
-    let waitTime = 0;
-    const objErr = {};
+  async request({url, method, body, auth, span, user}) {
     for (
-      let i = this.startTimeout;
+      let waitTime = this.startTimeout;
       waitTime <= this.maxTimeout;
-      i += this.deltaInterval
+      waitTime += this.deltaInterval
     ) {
       try {
-        if (span) span.log({ StartReq: url });
+        if (span) span.log({StartReq: url});
         const res = await axios({
           method,
           url: `${this.api}${url}`,
           data: body,
-          headers: this.createHeaders({ path: url, method, span, auth, user })
+          headers: this.createHeaders({path: url, method, span, auth, user})
         });
-        if (span) span.log({ EndReq: url });
+        if (span) span.log({EndReq: url});
         return res.data;
       } catch (e) {
-        err = e;
-        if (!objErr.err)
-          objErr.err = { err: e, message: e.message, code: e.code };
-        const errors = ["Gateway", "Unavailable"];
-        if (!errors.some(error => e.message.includes(error))) break;
-        await this.timeout(i);
-        waitTime += i;
+        if (e.response && e.response.status >= 500 && e.response.status < 600) await this.timeout(waitTime);
+        else throw e;
       }
     }
-    throw err;
   }
 
-  createHeaders({ auth, span, method, path, user }) {
+  createHeaders({auth, span, method, path, user}) {
     const headers = {};
     if (span) {
       span.setTag(Tags.HTTP_URL, path || "");
@@ -68,28 +59,28 @@ class clientApi {
     return !query.length ? null : query.slice(0, query.length - 1);
   }
 
-  async getObject({ id, params, auth, user }) {
+  async getObject({id, params, auth, user}) {
     if (!id) throw new Error("'id' is empty");
     let url = `/v2/internal/client-api/graph/${id}`;
     const query = this.prepareQuery(params);
     if (query) url += `?${query}`;
-    return this.request({ url, method: "GET", span: params.span, auth, user });
+    return this.request({url, method: "GET", span: params.span, auth, user});
   }
 
-  async getEdge({ src, name, dst, params, auth, user }) {
-    if (!src || !name || !dst) throw new Error("src or dst or name is semty");
+  async getEdge({src, name, dst, params, auth, user}) {
+    if (!src || !name || !dst) throw new Error("src, dst or name is empty");
     let url = `/v2/internal/client-api/graph/${src}/${name}/${dst}`;
     const query = this.prepareQuery(params);
     if (query) url += `?${query}`;
-    return this.request({ url, method: "GET", span: params.span, auth, user });
+    return this.request({url, method: "GET", span: params.span, auth, user});
   }
 
-  async getEdges({ src, name, params, auth, user }) {
-    if (!src || !name) throw new Error("src or name is semty");
+  async getEdges({src, name, params, auth, user}) {
+    if (!src || !name) throw new Error("src or name is empty");
     let url = `/v2/internal/client-api/graph/${src}/${name}`;
     const query = this.prepareQuery(params);
     if (query) url += `?${query}`;
-    return this.request({ url, method: "GET", span: params.span, auth, user });
+    return this.request({url, method: "GET", span: params.span, auth, user});
   }
 }
 

@@ -8,9 +8,9 @@ function newClient(url, tracer) {
     url,
     version: "*"
   });
-  const startTimeout = 5;
-  const deltaInterval = 20;
-  const maxTimeout = 3500;
+  const startTimeout = 200;
+  const deltaInterval = 150;
+  const maxTimeout = 10000;
 
   const request = (method, options) => {
     return new Promise((resolve, reject) => {
@@ -29,9 +29,6 @@ function newClient(url, tracer) {
   };
 
   const handle = async (method, url, span) => {
-    let err;
-    let waitTime = 0;
-    const objErr = {};
     const options = {
       path: url,
       headers: {}
@@ -42,20 +39,14 @@ function newClient(url, tracer) {
       span.setTag(Tags.SPAN_KIND, Tags.SPAN_KIND_RPC_CLIENT);
       tracer.inject(span, FORMAT_HTTP_HEADERS, options.headers);
     }
-    for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
+    for (let waitTime = startTimeout; waitTime <= maxTimeout; waitTime += deltaInterval) {
       try {
-        const res = await request(method, options);
-        return res;
+        return request(method, options);
       } catch (e) {
-        err = e;
-        const errors = ["Gateway", "Unavailable"];
-        if(!objErr.err) objErr.err = {err: e, message: e.message, code: e.code};
-        if (!errors.some(error => e.message.includes(error))) break;
-        await timeout(i);
-        waitTime += i;
+        if (e.response && e.response.status >= 500 && e.response.status < 600) await timeout(waitTime);
+        else throw e;
       }
     }
-    throw new Error(err);
   };
 
   return {
