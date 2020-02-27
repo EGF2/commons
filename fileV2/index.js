@@ -8,8 +8,8 @@ function newClient(url, tracer) {
     url,
     version: "*"
   });
-  const startTimeout = 200;
-  const deltaInterval = 150;
+  const startTimeout = 250;
+  const deltaInterval = 250;
   const maxTimeout = 10000;
 
   const request = (method, options) => {
