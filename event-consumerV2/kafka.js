@@ -1,4 +1,5 @@
-const kafka = require("no-kafka");
+const Kafka = require('node-rdkafka');
+const uuid = require("uuid").v4;
 
 /**
  * @param config - kafka config
@@ -6,45 +7,68 @@ const kafka = require("no-kafka");
  * @param errorHandler - error handler
  */
 
-const handler = (eventHandler, errorHandler, consumer) => async (messageSet, topic, partition) => {
+const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
-        for (const message of messageSet) {
-            await eventHandler(JSON.parse(message.message.value.toString("utf8")))
-            await consumer.commitOffset({
-                topic,
-                partition,
-                offset: message.offset
+        consumer.subscribe([config.kafka.topic]);
+        console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
+
+        while (true) {
+            const data = await new Promise((resolve, reject) => {
+                consumer.consume(1, (err, data) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(data)
+                });
             });
+            if (data.length) {
+                const message = data[0];
+                await eventHandler(JSON.parse(message.value.toString()));
+                consumer.commitMessage(message);
+            }
         }
-    } catch (e) {
-        errorHandler(e, consumer);
+    } catch (err) {
+        errorHandler(err);
     }
 };
 
 const newConsumer = async (config, eventHandler, errorHandler) => {
-    const consumer = new kafka.SimpleConsumer({
-        connectionString: config.kafka.hosts.join(","),
-        groupId: `${config["consumer-groupV2"]}`,
-        clientId: config.kafka["client-id"],
-        logger: {
-            logFunction: (q, w, e, error, t, y, u, i, o = "", p = "") => {
-                console.log(q, w, e, error, t, y, u, i, o, p);
-                if (error.includes("NoKafkaConnectionError")) errorHandler();
-              }
-          }
+    const consumer = new Kafka.KafkaConsumer({
+        'group.id': config.kafka.groupId,
+        'metadata.broker.list': config.kafka.hosts[0],
+        'enable.auto.offset.store': false,
+        'client.id': `${config.kafka.groupId}${uuid()}`,
+        'rebalance_cb': function (err, assignment) {
+            console.log('Rebalance called. Results', assignment.map(e => e.partition).join());
+            if (err.code === Kafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
+                this.assign(assignment);
+            } else if (err.code == Kafka.CODES.ERRORS.ERR__REVOKE_PARTITIONS) {
+                this.unassign();
+            } else {
+                console.error(err);
+            }
+        },
+    },
+        {
+            'auto.offset.reset': config.kafka.offsetStrategy || "earliest",
+        });
+    const handler = getHandler(config, eventHandler, errorHandler, consumer);
+
+    consumer.connect({ timeout: "1000ms" }, (err) => {
+        if (err) {
+            console.log(`Error connecting to Kafka broker: `, err);
+            process.exit(1);
+        }
+        console.log("Connected to Kafka broker");
     });
 
-    await consumer.init();
-    const fetchOffset = await consumer.fetchOffset([{
-        topic: config.kafka.topicV2,
-        partition: 0
-    }]);
-    let offset = fetchOffset[0].offset;
-    console.log("CURRENT OFFSET", offset);
-    if (offset > -1) {
-        offset++;
-    }
-    consumer.subscribe(config.kafka.topicV2, 0, { offset }, handler(eventHandler, errorHandler, consumer));
+    consumer.on('disconnected', (args) => {
+        console.error(`Consumer got disconnected: ${JSON.stringify(args)}`);
+        process.exit(1)
+    });
+
+    // register ready handler.
+    consumer.on('ready', handler);
 };
 
 module.exports = newConsumer;
