@@ -2,6 +2,8 @@ const Kafka = require('node-rdkafka');
 const uuid = require("uuid").v4;
 const { argv } = require('yargs');
 
+const timeout = ms => new Promise(res => setInterval(res, ms));
+
 /**
  * @param config - kafka config
  * @param eventHandler - event handler
@@ -34,9 +36,21 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
 };
 
 const newConsumer = async (config, eventHandler, errorHandler) => {
-    // check debug partition
-    if (argv.p && isNaN(Number(argv.p)))
-        throw new Error(`Invalid partition value ${argv.p}. Partition must be number`)
+
+    // for debug
+    let debugPartitions = null;
+    if (argv.p && argv.p !== 0)
+        debugPartitions = `${argv.p}`
+            .split(',')
+            .map(p => {
+                // check debug partition
+                if (isNaN(Number(p)) || p === "")
+                    throw new Error(`Invalid partition value ${argv.p}. Partition must be number or list of numbers (example: 1 or 1,2,3).`);
+
+                // mapping debug partition
+                return { topic: config.kafka.topic, partition: Number(p) }
+            })
+
 
     const consumer = new Kafka.KafkaConsumer({
         'group.id': config.kafka.groupId,
@@ -48,14 +62,14 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 let result = [];
 
                 // select debug partition if it is specified
-                if (!isNaN(Number(argv.p))) {
+                if (debugPartitions) {
                     console.log(
                         "\x1b[31m",
-                        `You are trying to manually subscribe to partition ${process.env.debugP}. If you do this, the service on Amazon will not stop reading this partition and this can lead to unexpected consequences.`
+                        `You are trying to manually subscribe to partitions ${process.env.debugP}. If you do this, the service on Amazon will not stop reading this partition and this can lead to unexpected consequences.`
                             .toUpperCase(),
                         "\x1b[0m"
                     );
-                    result = [{ topic: config.kafka.topic, partition: Number(argv.p) }];
+                    result = debugPartitions;
                 } else result = [...assignment];
 
                 // assign to partitions
