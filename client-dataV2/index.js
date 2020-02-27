@@ -212,20 +212,24 @@ function newClient(url, mode, tracer) {
         /**
          * Get object
          */
-        getObject: async function (id, options, author) { //
+        getObject: async function (id, options, author) {
             let object = null;
             try {
                 object = await redisGet(id);
             } catch (error) {
                 Log.warning("Redis request fail", { message: error.message, params: req.params });
-              }
-            if (!object) {
-                object = await handle(options, "GET", `/v2/client-data/graph/${id}`, "", author)
-                    .then(result => options && options.expand ? this.expand(result, options.expand) : result);
             }
-            else {
+
+            if (object) {
                 object = JSON.parse(object);
             }
+            else {
+                object = await handle(options, "GET", `/v2/client-data/graph/${id}`, "", author);
+            }
+
+            if (object && options && options.expand)
+                object = await this.expand(object, options.expand);
+
             return object;
         },
 
