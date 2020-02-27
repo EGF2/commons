@@ -5,9 +5,10 @@ const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
 const axios = require("axios");
 const redis = require("redis");
 const config = require("commons/config");
+const configM = require("config")
 const Logging = require("../Logging");
 
-const options = config.redis.split(":");
+const options = (config.redis || configM.redis).split(":");
 const redisClient = redis.createClient({ host: options[0], port: options[1] });
 const { promisify } = require("util");
 const redisGet = promisify(redisClient.get).bind(redisClient);

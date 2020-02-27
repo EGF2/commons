@@ -40,7 +40,9 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         'client.id': `${config.kafka.groupId}${uuid()}`,
         'rebalance_cb': function (err, assignment) {
             console.log('Rebalance called. Results', assignment.map(e => e.partition).join());
-            if (err.code === Kafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
+            if (process.env.debugPartition) {
+                this.assign()
+            } else if (err.code === Kafka.CODES.ERRORS.ERR__ASSIGN_PARTITIONS) {
                 this.assign(assignment);
             } else if (err.code == Kafka.CODES.ERRORS.ERR__REVOKE_PARTITIONS) {
                 this.unassign();
