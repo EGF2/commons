@@ -20,7 +20,7 @@
     "rethinkdbdash": "^2.3.23",
     "sorted-set": "^0.2.2",
     "uuid": "^3.4.0",
-    "yargs": "^6.3.0"
+    "yargs": "^6.6.0"
   },
   "devDependencies": {
     "eslint": "^3.8.1",
