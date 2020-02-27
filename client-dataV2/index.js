@@ -38,9 +38,9 @@ function newClient(url, mode, tracer) {
     if (mode && mode.ignoreCD) ignoreErrors = mode.ignoreCD;
 
     // Time in ms
-    const startTimeout = 5;
-    const deltaInterval = 20;
-    const maxTimeout = 3500;
+    const startTimeout = 250;
+    const deltaInterval = 250;
+    const maxTimeout = 10000;
 
     const request = async (method, params) => {
     //     const res = await axios({
@@ -96,28 +96,25 @@ function newClient(url, mode, tracer) {
 
         let err;
         let waitTime = 0;
-        const objErr = {};
-        for (let i = startTimeout; waitTime <= maxTimeout; i += deltaInterval) {
+        for (let waitTime = startTimeout; waitTime <= maxTimeout; waitTime += deltaInterval) {
             let res;
             try {
                 span.log({message: "start request"});
                 res = await request(method, { options, body });
-                span.log({message: "recived result"});
+                span.log({message: "received result"});
                 return res;
             } catch (e) {
-                span.log({message: "recived error"});
+                span.log({message: "received error"});
                 err = e;
-                if (!objErr.err) objErr.err = { err: e, message: e.message, code: e.code }
                 if (ignoreErrors) {
                     if ((e.body && e.body.code === "ObjectDeleted") || e.message.includes("ObjectDeleted")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "SourceWasDeleted") || e.message.includes("SourceWasDeleted")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "EdgeNotExists") || e.message.includes("EdgeNotExists")) return { message: new Date().toISOString() };
                     if ((e.body && e.body.code === "EdgeAlreadyExists") || e.message.includes("EdgeAlreadyExists")) return { message: new Date().toISOString() };
                 }
-                const errors = ["Gateway", "Unavailable"];
-                if (!errors.some(error => e.message.includes(error))) break;
-                await timeout(i);
-                waitTime += i;
+                if (e.response && e.response.status >= 500 && e.response.status < 600) await timeout(waitTime);
+                else break;
+
             }
         }
         if (span) {
