@@ -50,7 +50,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         },
     },
         {
-            'auto.offset.reset': 'earliest',
+            'auto.offset.reset': config.kafka.offsetStrategy || "earliest",
         });
     const handler = getHandler(config, eventHandler, errorHandler, consumer);
 
