@@ -25,10 +25,6 @@ function newClient(url, mode, tracer) {
   });
   const redisGet = promisify(redisClient.get).bind(redisClient);
 
-  const redisClient = redis.createClient({
-    host: options[0],
-    port: options[1]
-  });
   redisClient.on("error", err => {
     Log.error("Error: ", err);
   });
