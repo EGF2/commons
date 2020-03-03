@@ -12,6 +12,7 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
     try {
         consumer.subscribe([config.kafka.topic]);
         console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
+        console.log('Consumer', consumer)
 
         while (true) {
             const data = await new Promise((resolve, reject) => {
@@ -49,7 +50,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 return { topic: config.kafka.topic, partition: Number(p) }
             })
 
-
+    console.log('auto.offset.reset', config.kafka.offsetStrategy || "earliest")
     const consumer = new Kafka.KafkaConsumer({
         'group.id': config.kafka.groupId,
         'metadata.broker.list': config.kafka.hosts[0],
