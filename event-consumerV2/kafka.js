@@ -14,6 +14,7 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
         console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
 
         while (true) {
+            // get new message
             const data = await new Promise((resolve, reject) => {
                 consumer.consume(1, (err, data) => {
                     if (err) {
@@ -22,10 +23,15 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                     resolve(data)
                 });
             });
+            // if message is not empty, then processing
             if (data.length) {
+                // parsing message for input kafkaInfo into event
                 const { value, ...message } = data[0];
-                const event = { kafkaInfo: message, ...JSON.parse(value.toString())}
+                const event = { kafkaInfo: message, ...JSON.parse(value.toString()) }
+
+                // processing
                 await eventHandler(event);
+
                 consumer.commitMessage(message);
             }
         }
@@ -83,6 +89,8 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         {
             'auto.offset.reset': config.kafka.offsetStrategy || "earliest",
         });
+
+    // create a handler based on the provided functions
     const handler = getHandler(config, eventHandler, errorHandler, consumer);
 
     consumer.connect({ timeout: "1000ms" }, (err) => {
