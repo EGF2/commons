@@ -2,8 +2,6 @@ const Kafka = require('node-rdkafka');
 const uuid = require("uuid").v4;
 const { argv } = require('yargs');
 
-let count = 0;
-
 /**
  * @param config - kafka config
  * @param eventHandler - event handler
@@ -14,7 +12,6 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
     try {
         consumer.subscribe([config.kafka.topic]);
         console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
-        console.log('Consumer', consumer)
 
         while (true) {
             const data = await new Promise((resolve, reject) => {
@@ -26,12 +23,7 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                 });
             });
             if (data.length) {
-                count++;
                 const { value, ...message } = data[0];
-                if (count === 100) {
-                    console.log("Current offset: ", message.offset);
-                    count = 0;
-                }
                 const event = { kafkaInfo: message, ...JSON.parse(value.toString())}
                 await eventHandler(event);
                 consumer.commitMessage(message);
@@ -58,7 +50,6 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 return { topic: config.kafka.topic, partition: Number(p) }
             })
 
-    console.log('auto.offset.reset', config.kafka.offsetStrategy || "earliest")
     const consumer = new Kafka.KafkaConsumer({
         'group.id': config.kafka.groupId,
         'metadata.broker.list': config.kafka.hosts[0],
