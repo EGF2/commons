@@ -2,6 +2,8 @@ const Kafka = require('node-rdkafka');
 const uuid = require("uuid").v4;
 const { argv } = require('yargs');
 
+let count = 0;
+
 /**
  * @param config - kafka config
  * @param eventHandler - event handler
@@ -24,7 +26,12 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                 });
             });
             if (data.length) {
+                count++;
                 const message = data[0];
+                if (count === 100) {
+                    console.log("Current offset: ", message.offset);
+                    count = 0;
+                }
                 await eventHandler(JSON.parse(message.value.toString()));
                 consumer.commitMessage(message);
             }
