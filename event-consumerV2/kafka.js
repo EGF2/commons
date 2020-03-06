@@ -23,6 +23,8 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
             });
             if (data.length) {
                 const message = data[0];
+                console.log("kafka info", message.offset);
+
                 await eventHandler(JSON.parse(message.value.toString()));
                 consumer.commitMessage(message);
             }
