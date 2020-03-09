@@ -1,6 +1,32 @@
 const Kafka = require('node-rdkafka');
 const uuid = require("uuid").v4;
 const { argv } = require('yargs');
+const Logging = require("../Logging");
+
+const Log = new Logging(__filename);
+
+let currentPartitions = [];
+
+const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
+    let assignments = consumer.assignments();
+    consumer.committed([...currentPartitions, ...assignments], 3000, (e, data) => {
+        if (e) return reject(e);
+        assignments = assignments.map(a => a.partition);
+        const result = {
+            new: [],
+            old: [],
+        }
+        data.forEach(i => {
+            if (assignments.includes(i.partition))
+                result.new.push({ [i.partition]: i.offset });
+
+            if (currentPartitions.includes(i.partition))
+                result.old.push({ [i.partition]: i.offset });
+        });
+
+        resolve(result);
+    })
+})
 
 /**
  * @param config - kafka config
@@ -11,7 +37,7 @@ const { argv } = require('yargs');
 const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
         consumer.subscribe([config.kafka.topic]);
-        console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
+        Log.info("Consumer subscribed on topic", { topic: config.kafka.topic, client: consumer.name });
 
         while (true) {
             // get new message
@@ -78,11 +104,16 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
 
                 // assign to partitions
                 this.assign(result);
-                console.log('Rebalance called. Results', result.map(e => e.partition).join());
+                Log.info('Rebalance called. Results', { partitions: (this.assignments()).map(e => e.partition).join() });
+
+                const offsetInfo = await getOffsetsInfo(consumer);
+                currentPartitions = (this.assignments()).map(i => i.partition);
+                Log.info("Offsets info", offsetInfo);
             } else if (err.code == Kafka.CODES.ERRORS.ERR__REVOKE_PARTITIONS) {
                 this.unassign();
             } else {
-                console.error(err);
+                Log.error("Rebalance error", err, this);
+                process.exit(1);
             }
         },
     },
@@ -95,14 +126,14 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
 
     consumer.connect({ timeout: "1000ms" }, (err) => {
         if (err) {
-            console.log(`Error connecting to Kafka broker: `, err);
+            Log.error(`Error connecting to Kafka broker: `, err, consumer)
             process.exit(1);
         }
-        console.log("Connected to Kafka broker");
+        Log.info("Connected to Kafka broker");
     });
 
-    consumer.on('disconnected', (args) => {
-        console.error(`Consumer got disconnected: ${JSON.stringify(args)}`);
+    consumer.on('disconnected', (e, data) => {
+        Log.error(`Consumer got disconnected: `, e, { ...data, consumer });
         process.exit(1)
     });
 

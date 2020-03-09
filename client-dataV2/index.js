@@ -7,7 +7,7 @@ const redis = require("redis");
 const Logging = require("../Logging");
 const { promisify } = require("util");
 
-const Log = new Logging(require.main.filename);
+const Log = new Logging(__filename);
 
 let _url;
 
