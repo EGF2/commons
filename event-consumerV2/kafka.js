@@ -13,20 +13,20 @@ const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
         if (e) return reject(e);
         assignments = assignments.map(a => a.partition);
         const result = {
-            new: [],
-            old: [],
+            new: {},
+            old: {},
         }
         data.forEach(i => {
             if (assignments.includes(i.partition))
-                result.new.push({ [i.partition]: i.offset });
+                result.new[`partition ${i.partition}`] = i.offset;
 
             if (currentPartitions.includes(i.partition))
-                result.old.push({ [i.partition]: i.offset });
+                result.old[`partition ${i.partition}`] = i.offset;
         });
 
         resolve(result);
     })
-})
+});
 
 /**
  * @param config - kafka config
