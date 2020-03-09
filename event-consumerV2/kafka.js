@@ -3,7 +3,7 @@ const uuid = require("uuid").v4;
 const { argv } = require('yargs');
 const Logging = require("../Logging");
 
-const Log = new Logging(require.main.filename);
+const Log = new Logging(__filename);
 
 let currentPartitions = [];
 
@@ -126,7 +126,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
 
     consumer.connect({ timeout: "1000ms" }, (err) => {
         if (err) {
-            Log.error((`Error connecting to Kafka broker: `, err, consumer))
+            Log.error(`Error connecting to Kafka broker: `, err, consumer)
             process.exit(1);
         }
         Log.info("Connected to Kafka broker");
