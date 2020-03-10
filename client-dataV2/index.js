@@ -9,9 +9,6 @@ const { promisify } = require("util");
 
 const Log = new Logging(__filename);
 
-const DEFAULT_COUNT_EDGES = 25;
-const MAX_EDGES_COUNT = 100;
-
 let _url;
 
 function newClient(url, mode, tracer) {
@@ -396,9 +393,12 @@ function newClient(url, mode, tracer) {
       const edges = await redisGet(`${src}-${name}`);
       if (edges) {
         const after = options.after || 0;
+
+        // Get pagination constants from graph config
+        const { pagination } = await this.getGraphConfig()
         const count = options.count
-          ? options.count > MAX_EDGES_COUNT ? MAX_EDGES_COUNT : options.count // max 100
-          : DEFAULT_COUNT_EDGES; // default 25
+          ? options.count > pagination.max_count ? pagination.max_count : options.count // max 100
+          : pagination.default_count; // default 25
         const ids = edges.splice(after, count);
         const results = await this.getObjects(ids.join(","), options);
         return {
