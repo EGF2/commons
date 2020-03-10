@@ -9,6 +9,9 @@ const { promisify } = require("util");
 
 const Log = new Logging(__filename);
 
+const DEFAULT_COUNT_EDGES = 25;
+const MAX_EDGES_COUNT = 100;
+
 let _url;
 
 function newClient(url, mode, tracer) {
@@ -78,8 +81,8 @@ function newClient(url, mode, tracer) {
       headers: {}
     };
     let span = {
-      log: () => {},
-      setTag: () => {}
+      log: () => { },
+      setTag: () => { }
     };
 
     if (option && option.span) {
@@ -161,7 +164,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get graph config
      */
-    getGraphConfig: function(options) {
+    getGraphConfig: function (options) {
       if (graphConfig) {
         return Promise.resolve(graphConfig);
       }
@@ -177,7 +180,7 @@ function newClient(url, mode, tracer) {
       });
     },
 
-    getAggregatesConfig: function(options) {
+    getAggregatesConfig: function (options) {
       if (aggregatesConfig) {
         return Promise.resolve(aggregatesConfig);
       }
@@ -191,7 +194,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get edge config
      */
-    getEdgeConfig: function(objOrID, edgeName, options) {
+    getEdgeConfig: function (objOrID, edgeName, options) {
       return this.getGraphConfig(options).then(config => {
         let objectType;
         if (typeof objOrID === "string") {
@@ -229,7 +232,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get object type by ID
      */
-    getObjectType: function(id, options) {
+    getObjectType: function (id, options) {
       return this.getGraphConfig(options).then(
         () => codeToObjectType[id.slice(-2)]
       );
@@ -241,7 +244,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get object
      */
-    getObject: async function(id, options, author) {
+    getObject: async function (id, options, author) {
       let object = null;
       try {
         object = await redisGet(id);
@@ -273,7 +276,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get objects
      */
-    getObjects: function(ids, options, author) {
+    getObjects: function (ids, options, author) {
       if (typeof ids.slice(-1)[0] === "object") {
         options = ids.slice(-1)[0];
         ids = ids.slice(0, -1);
@@ -344,32 +347,68 @@ function newClient(url, mode, tracer) {
     /**
      * Get edge
      */
-    getEdge: function(srcID, edgeName, dstID, options) {
-      return handle(
+    getEdge: async function (src, name, dst, options) {
+      // from redis
+      let id = null;
+      const edges = await redisGet(`${src}-${name}`);
+      if (edges) const id = edges.find(e => e === dst);
+      if (id) return this.getObject(id, options);
+
+      // from client-data
+      const result = await handle(
         options,
         "GET",
-        `/v2/client-data/graph/${srcID}/${edgeName}/${dstID}`
-      ).then(result =>
-        options && options.expand ? this.expand(result, options.expand) : result
-      );
+        `/v2/client-data/graph/${src}/${name}/${dst}`
+      )
+      return options && options.expand ? this.expand(result, options.expand) : result
     },
 
     /**
      * Get all edges
+     * @param {String} src source object id
+     * @param {String} name edge name
+     * @param {Object} options options, for example: { expand: "field, ..." }
+     * @return {Array} objects on edge
      */
-    getAllEdges: (srcID, edgeName, options) =>
-      handle(
+    getAllEdges: async function (src, name, options) {
+      // from redis
+      const ids = await redisGet(`${src}-${name}`);
+      if (ids) return this.getObjects(ids.join(","), options);
+
+      // from client-data
+      const result = await handle(
         options,
         "GET",
-        `/v2/client-data/getAllEdges/${srcID}/${edgeName}`
-      ),
+        `/v2/client-data/getAllEdges/${src}/${name}`
+      )
+      return options && options.expand ? this.expand(result, options.expand) : result
+    },
 
     /**
      * Get edges
+     * @param {String} src source object id
+     * @param {String} name edge name
+     * @param {Object} options options, for example: { expand: "field, ..." }
+     * @return {Object} with fields results and count
      */
-    // eslint-disable-next-line object-shorthand
-    getEdges: function(srcID, edgeName, options) {
-      let url = `/v2/client-data/graph/${srcID}/${edgeName}`;
+    getEdges: async function (src, name, options) {
+      // from redis
+      const edges = await redisGet(`${src}-${name}`);
+      if (edges) {
+        const after = options.after || 0;
+        const count = options.count
+          ? options.count > MAX_EDGES_COUNT ? MAX_EDGES_COUNT : options.count // max 100
+          : DEFAULT_COUNT_EDGES; // default 25
+        const ids = edges.splice(after, count);
+        const results = await this.getObjects(ids.join(","), options);
+        return {
+          results,
+          count: results.length,
+        }
+      }
+
+      // from client-data
+      let url = `/v2/client-data/graph/${src}/${name}`;
       if (options) {
         let params = [];
         if (options.after !== undefined) {
@@ -382,9 +421,8 @@ function newClient(url, mode, tracer) {
           url += `?${params.join("&")}`;
         }
       }
-      return handle(options, "GET", url).then(result =>
-        options && options.expand ? this.expand(result, options.expand) : result
-      );
+      const result = await handle(options, "GET", url)
+      options && options.expand ? this.expand(result, options.expand) : result
     },
 
     /**
@@ -449,7 +487,7 @@ function newClient(url, mode, tracer) {
     /**
      * Expand object or page results with expand
      */
-    expand: function(object, expand) {
+    expand: function (object, expand) {
       // array of objects which need expand
       let objects = [];
       if (object.results || object.results === []) {
