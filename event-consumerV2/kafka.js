@@ -56,6 +56,10 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                 const { value, ...message } = data[0];
                 const event = { kafkaInfo: message, ...JSON.parse(value.toString()) }
 
+                // service should be down if it gets an old message from Kafka
+                if (new Date(message.timestamp) - new Date() > config.kafka.maxDeltaTimestamp || 1 * 24 * 60 * 60 * 1000) // default 1 day
+                    throw new Error(`Consumer get old message for ${message.timestamp}`)
+
                 // processing
                 await eventHandler(event);
 
