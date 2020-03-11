@@ -1,8 +1,33 @@
 const Kafka = require('node-rdkafka');
 const uuid = require("uuid").v4;
 const { argv } = require('yargs');
+const Logging = require("../Logging");
 
-const timeout = ms => new Promise(res => setInterval(res, ms));
+const Log = new Logging(__filename);
+
+let currentPartitions = [];
+
+const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
+    let assignments = consumer.assignments();
+    consumer.committed([...currentPartitions, ...assignments], 3000, (e, data) => {
+        if (e) return reject(e);
+        const checkAssignments = assignments.map(a => a.partition);
+        const checkCurrentPartitions = currentPartitions.map(p => p.partition);
+        const result = {
+            new: {},
+            old: {},
+        }
+        data.forEach(i => {
+            if (checkAssignments.includes(i.partition))
+                result.new[`partition ${i.partition}`] = i.offset;
+
+            if (checkCurrentPartitions.includes(i.partition))
+                result.old[`partition ${i.partition}`] = i.offset;
+        });
+
+        resolve(result);
+    })
+});
 
 /**
  * @param config - kafka config
@@ -13,9 +38,10 @@ const timeout = ms => new Promise(res => setInterval(res, ms));
 const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
         consumer.subscribe([config.kafka.topic]);
-        console.log(`Consumer ${consumer.name} subscribed on ${config.kafka.topic}`)
+        Log.info("Consumer subscribed on topic", { topic: config.kafka.topic, client: consumer.name });
 
         while (true) {
+            // get new message
             const data = await new Promise((resolve, reject) => {
                 consumer.consume(1, (err, data) => {
                     if (err) {
@@ -24,9 +50,15 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                     resolve(data)
                 });
             });
+            // if message is not empty, then processing
             if (data.length) {
-                const message = data[0];
-                await eventHandler(JSON.parse(message.value.toString()));
+                // parsing message for input kafkaInfo into event
+                const { value, ...message } = data[0];
+                const event = { kafkaInfo: message, ...JSON.parse(value.toString()) }
+
+                // processing
+                await eventHandler(event);
+
                 consumer.commitMessage(message);
             }
         }
@@ -51,7 +83,6 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 return { topic: config.kafka.topic, partition: Number(p) }
             })
 
-
     const consumer = new Kafka.KafkaConsumer({
         'group.id': config.kafka.groupId,
         'metadata.broker.list': config.kafka.hosts[0],
@@ -74,29 +105,36 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
 
                 // assign to partitions
                 this.assign(result);
-                console.log('Rebalance called. Results', result.map(e => e.partition).join());
+                Log.info('Rebalance called. Results', { partitions: (this.assignments()).map(e => e.partition).join() });
+                const offsetInfo = await getOffsetsInfo(consumer);
+                currentPartitions = this.assignments();
+
+                Log.info("Offsets info", offsetInfo);
             } else if (err.code == Kafka.CODES.ERRORS.ERR__REVOKE_PARTITIONS) {
                 this.unassign();
             } else {
-                console.error(err);
+                Log.error("Rebalance error", err, this);
+                process.exit(1);
             }
         },
     },
         {
             'auto.offset.reset': config.kafka.offsetStrategy || "earliest",
         });
+
+    // create a handler based on the provided functions
     const handler = getHandler(config, eventHandler, errorHandler, consumer);
 
     consumer.connect({ timeout: "1000ms" }, (err) => {
         if (err) {
-            console.log(`Error connecting to Kafka broker: `, err);
+            Log.error(`Error connecting to Kafka broker: `, err, consumer)
             process.exit(1);
         }
-        console.log("Connected to Kafka broker");
+        Log.info("Connected to Kafka broker");
     });
 
-    consumer.on('disconnected', (args) => {
-        console.error(`Consumer got disconnected: ${JSON.stringify(args)}`);
+    consumer.on('disconnected', (e, data) => {
+        Log.error(`Consumer got disconnected: `, e, { ...data, consumer });
         process.exit(1)
     });
 
