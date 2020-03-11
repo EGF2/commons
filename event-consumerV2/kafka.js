@@ -11,16 +11,17 @@ const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
     let assignments = consumer.assignments();
     consumer.committed([...currentPartitions, ...assignments], 3000, (e, data) => {
         if (e) return reject(e);
-        assignments = assignments.map(a => a.partition);
+        const checkAssignments = assignments.map(a => a.partition);
+        const checkCurrentPartitions = currentPartitions.map(p => p.partition);
         const result = {
             new: {},
             old: {},
         }
         data.forEach(i => {
-            if (assignments.includes(i.partition))
+            if (checkAssignments.includes(i.partition))
                 result.new[`partition ${i.partition}`] = i.offset;
 
-            if (currentPartitions.includes(i.partition))
+            if (checkCurrentPartitions.includes(i.partition))
                 result.old[`partition ${i.partition}`] = i.offset;
         });
 
@@ -105,9 +106,9 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 // assign to partitions
                 this.assign(result);
                 Log.info('Rebalance called. Results', { partitions: (this.assignments()).map(e => e.partition).join() });
-
                 const offsetInfo = await getOffsetsInfo(consumer);
-                currentPartitions = (this.assignments()).map(i => i.partition);
+                currentPartitions = this.assignments();
+
                 Log.info("Offsets info", offsetInfo);
             } else if (err.code == Kafka.CODES.ERRORS.ERR__REVOKE_PARTITIONS) {
                 this.unassign();
