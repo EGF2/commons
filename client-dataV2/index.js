@@ -403,8 +403,10 @@ function newClient(url, mode, tracer) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
+        console.log("VLADISLAV RESPONSE", response )
         const edges = JSON.parse(response)
         const after = options.after || 0;
+        console.log("VLADISLAV edges", edges )
 
         // Get pagination constants from graph config
         const { pagination } = await this.getGraphConfig()
@@ -412,6 +414,8 @@ function newClient(url, mode, tracer) {
           ? options.count > pagination.max_count ? pagination.max_count : options.count // max 100
           : pagination.default_count; // default 25
         const ids = edges.splice(after, count);
+        console.log("VLADISLAV ids", ids )
+
         const results = await this.getObjects(ids.join(","), options);
         return {
           results,
