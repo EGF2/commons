@@ -380,7 +380,10 @@ function newClient(url, mode, tracer) {
       const response = await redisGet(`${src}-${name}`);
       if (response) {
         const ids = JSON.parse(response);
-        const results = this.getObjects(ids, options);
+        // If the radish is an empty array then the array of objects will throw an error
+        const results = ids.length ? this.getObjects(ids, options) : [];
+
+        // getObjects can return an object instead of an array if the length of the array with ID equal to 1
         return Array.isArray(results) ? results : [results];
       }
 
@@ -414,9 +417,10 @@ function newClient(url, mode, tracer) {
           ? options.count > pagination.max_count ? pagination.max_count : options.count // max 100
           : pagination.default_count; // default 25
         const ids = edges.splice(after, count);
+        // If the radish is an empty array then the array of objects will throw an error
+        const results = ids.length ? await this.getObjects(ids, options) : [];
 
-        const results = await this.getObjects(ids, options);
-
+        // getObjects can return an object instead of an array if the length of the array with ID equal to 1
         return {
           results: Array.isArray(results) ? results : [results],
           count: results.length,
