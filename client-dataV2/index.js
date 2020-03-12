@@ -407,7 +407,6 @@ function newClient(url, mode, tracer) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
-        console.log("VLADISLAV RESPONSE", response )
         const edges = JSON.parse(response)
         const after = options.after || 0;
 
@@ -417,6 +416,7 @@ function newClient(url, mode, tracer) {
           ? options.count > pagination.max_count ? pagination.max_count : options.count // max 100
           : pagination.default_count; // default 25
         const ids = edges.splice(after, count);
+
         // If the radish is an empty array then the array of objects will throw an error
         const results = ids.length ? await this.getObjects(ids, options) : [];
 
