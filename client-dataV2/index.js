@@ -1,11 +1,11 @@
-"use strict";
+
 
 const restify = require("restify-clients");
 const { Tags, FORMAT_HTTP_HEADERS } = require("opentracing");
 const axios = require("axios");
 const redis = require("redis");
-const Logging = require("../Logging");
 const { promisify } = require("util");
+const Logging = require("../Logging");
 
 const Log = new Logging(__filename);
 
@@ -95,7 +95,7 @@ function newClient(url, mode, tracer) {
     if (notProcess) options.headers.notProcess = notProcess;
 
     let err;
-    let waitTime = 0;
+    const waitTime = 0;
     for (
       let waitTime = startTimeout;
       waitTime <= maxTimeout;
@@ -167,7 +167,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get graph config
      */
-    getGraphConfig: function (options) {
+    getGraphConfig(options) {
       if (graphConfig) {
         return Promise.resolve(graphConfig);
       }
@@ -183,7 +183,7 @@ function newClient(url, mode, tracer) {
       });
     },
 
-    getAggregatesConfig: function (options) {
+    getAggregatesConfig(options) {
       if (aggregatesConfig) {
         return Promise.resolve(aggregatesConfig);
       }
@@ -197,7 +197,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get edge config
      */
-    getEdgeConfig: function (objOrID, edgeName, options) {
+    getEdgeConfig(objOrID, edgeName, options) {
       return this.getGraphConfig(options).then(config => {
         let objectType;
         if (typeof objOrID === "string") {
@@ -235,7 +235,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get object type by ID
      */
-    getObjectType: function (id, options) {
+    getObjectType(id, options) {
       return this.getGraphConfig(options).then(
         () => codeToObjectType[id.slice(-2)]
       );
@@ -247,7 +247,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get object
      */
-    getObject: async function (id, options, author) {
+    async getObject(id, options, author) {
       let object = null;
       try {
         object = await redisGet(id);
@@ -279,7 +279,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get objects
      */
-    getObjects: function (ids, options, author) {
+    getObjects(ids, options, author) {
       if (typeof ids.slice(-1)[0] === "object") {
         options = ids.slice(-1)[0];
         ids = ids.slice(0, -1);
@@ -350,7 +350,7 @@ function newClient(url, mode, tracer) {
     /**
      * Get edge
      */
-    getEdge: async function (src, name, dst, options) {
+    async getEdge(src, name, dst, options) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
@@ -375,12 +375,13 @@ function newClient(url, mode, tracer) {
      * @param {Object} options options, for example: { expand: "field, ..." }
      * @return {Array} objects on edge
      */
-    getAllEdges: async function (src, name, options) {
+    async getAllEdges(src, name, options) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
         const ids = JSON.parse(response);
-        return this.getObjects(ids.join(","), options);
+        const results = this.getObjects(ids, options);
+        return Array.isArray(results) ? results : [results];
       }
 
       // from client-data
@@ -399,14 +400,13 @@ function newClient(url, mode, tracer) {
      * @param {Object} options options, for example: { expand: "field, ..." }
      * @return {Object} with fields results and count
      */
-    getEdges: async function (src, name, options) {
+    async getEdges(src, name, options) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
         console.log("VLADISLAV RESPONSE", response )
         const edges = JSON.parse(response)
         const after = options.after || 0;
-        console.log("VLADISLAV edges", edges )
 
         // Get pagination constants from graph config
         const { pagination } = await this.getGraphConfig()
@@ -414,11 +414,11 @@ function newClient(url, mode, tracer) {
           ? options.count > pagination.max_count ? pagination.max_count : options.count // max 100
           : pagination.default_count; // default 25
         const ids = edges.splice(after, count);
-        console.log("VLADISLAV ids", ids )
 
-        const results = await this.getObjects(ids.join(","), options);
+        const results = await this.getObjects(ids, options);
+
         return {
-          results,
+          results: Array.isArray(results) ? results : [results],
           count: results.length,
         }
       }
@@ -426,7 +426,7 @@ function newClient(url, mode, tracer) {
       // from client-data
       let url = `/v2/client-data/graph/${src}/${name}`;
       if (options) {
-        let params = [];
+        const params = [];
         if (options.after !== undefined) {
           params.push(`after=${options.after}`);
         }
@@ -486,7 +486,7 @@ function newClient(url, mode, tracer) {
      */
     forEachPage: (query, handler) => {
       let count = 0;
-      let action = page =>
+      const action = page =>
         Promise.resolve().then(() => {
           return Promise.resolve()
             .then(() => handler(page))
@@ -503,7 +503,7 @@ function newClient(url, mode, tracer) {
     /**
      * Expand object or page results with expand
      */
-    expand: function (object, expand) {
+    expand(object, expand) {
       // array of objects which need expand
       let objects = [];
       if (object.results || object.results === []) {
@@ -512,7 +512,7 @@ function newClient(url, mode, tracer) {
         objects.push(object);
       }
       // "field or edge" -> "next level expand"
-      let expandMap = {};
+      const expandMap = {};
       let curly = 0; // count of curly brackets
       let current = ""; // current expand item
       expand.split("").forEach(ch => {
@@ -541,7 +541,7 @@ function newClient(url, mode, tracer) {
         expandMap[current] = "";
       }
       Object.keys(expandMap).forEach(key => {
-        let i = key.search("{");
+        const i = key.search("{");
         if (i > 0) {
           delete expandMap[key];
           expandMap[key.slice(0, i)] = key.slice(i + 1, -1);
@@ -552,13 +552,13 @@ function newClient(url, mode, tracer) {
       if (objects && objects.length) {
         objects = objects.map(obj => {
           return this.getGraphConfig().then(config => {
-            let objCfg = config[obj.object_type]; // object config
-            let promises = [];
+            const objCfg = config[obj.object_type]; // object config
+            const promises = [];
             Object.keys(expandMap).forEach(field => {
-              let options = {
+              const options = {
                 expand: expandMap[field]
               };
-              let split = field.split("(");
+              const split = field.split("(");
               field = split[0];
               if (split[1]) {
                 options.count = split[1].slice(0, -1);
