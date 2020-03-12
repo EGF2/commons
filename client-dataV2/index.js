@@ -348,7 +348,7 @@ function newClient(url, mode, tracer) {
       // from redis
       let id = null;
       const edges = await redisGet(`${src}-${name}`);
-      if (edges) const id = edges.find(e => e === dst);
+      if (edges) id = edges.find(e => e === dst);
       if (id) return this.getObject(id, options);
 
       // from client-data
