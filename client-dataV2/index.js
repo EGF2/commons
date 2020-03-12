@@ -146,7 +146,13 @@ function newClient(url, mode, tracer) {
         err
       });
     }
-
+    console.log(
+      JSON.stringify({
+        name: "test service",
+        m1: err.message,
+        m2: err.response && err.response.data
+      })
+    );
     throw err;
   };
 
