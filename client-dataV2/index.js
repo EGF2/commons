@@ -399,7 +399,7 @@ function newClient(url, mode, tracer) {
       const edges = await redisGet(`${src}-${name}`);
       if (edges) {
         const after = options.after || 0;
-
+        console.log("VLADISLAV", edges)
         // Get pagination constants from graph config
         const { pagination } = await this.getGraphConfig()
         const count = options.count
