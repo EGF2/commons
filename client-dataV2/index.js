@@ -352,10 +352,12 @@ function newClient(url, mode, tracer) {
      */
     getEdge: async function (src, name, dst, options) {
       // from redis
-      let id = null;
-      const edges = await redisGet(`${src}-${name}`);
-      if (edges) id = edges.find(e => e === dst);
-      if (id) return this.getObject(id, options);
+      const response = await redisGet(`${src}-${name}`);
+      if (response) {
+        const edges = JSON.parse(responce);
+        const id = edges.find(e => e === dst);
+        if (id) return this.getObject(id, options);
+      }
 
       // from client-data
       const result = await handle(
@@ -375,8 +377,11 @@ function newClient(url, mode, tracer) {
      */
     getAllEdges: async function (src, name, options) {
       // from redis
-      const ids = await redisGet(`${src}-${name}`);
-      if (ids) return this.getObjects(ids.join(","), options);
+      const response = await redisGet(`${src}-${name}`);
+      if (response) {
+        const ids = JSON.parse(response);
+        return this.getObjects(ids.join(","), options);
+      }
 
       // from client-data
       const result = await handle(
@@ -396,10 +401,11 @@ function newClient(url, mode, tracer) {
      */
     getEdges: async function (src, name, options) {
       // from redis
-      const edges = await redisGet(`${src}-${name}`);
-      if (edges) {
+      const response = await redisGet(`${src}-${name}`);
+      if (response) {
+        const edges = JSON.parse(response)
         const after = options.after || 0;
-        console.log("VLADISLAV", edges)
+
         // Get pagination constants from graph config
         const { pagination } = await this.getGraphConfig()
         const count = options.count
