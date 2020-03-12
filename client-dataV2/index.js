@@ -354,7 +354,7 @@ function newClient(url, mode, tracer) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
-        const edges = JSON.parse(responce);
+        const edges = JSON.parse(response);
         const id = edges.find(e => e === dst);
         if (id) return this.getObject(id, options);
       }
@@ -380,11 +380,19 @@ function newClient(url, mode, tracer) {
       const response = await redisGet(`${src}-${name}`);
       if (response) {
         const ids = JSON.parse(response);
-        // If the radish is an empty array then the array of objects will throw an error
-        const results = ids.length ? this.getObjects(ids, options) : [];
+        try {
+          // If the radish is an empty array then the array of objects will throw an error
+          // getObjects can return an object instead of an array if the length of the array with ID equal to 1
+          let results;
+          if (ids.length) {
+            results = await this.getObjects(ids, options);
+            results = ids.length === 1 ? [results] : results.results;
+          } else results = [];
 
-        // getObjects can return an object instead of an array if the length of the array with ID equal to 1
-        return Array.isArray(results) ? results : [results];
+          return results;
+        } catch (e) {
+          throw e;
+        }
       }
 
       // from client-data
@@ -408,6 +416,7 @@ function newClient(url, mode, tracer) {
       const response = await redisGet(`${src}-${name}`);
       if (response) {
         const edges = JSON.parse(response)
+        const countEdges = edges.length;
         const after = options.after || 0;
 
         // Get pagination constants from graph config
@@ -416,13 +425,17 @@ function newClient(url, mode, tracer) {
           ? options.count > pagination.max_count ? pagination.max_count : options.count // max 100
           : pagination.default_count; // default 25
         const ids = edges.splice(after, count);
-        // If the radish is an empty array then the array of objects will throw an error
-        const results = ids.length ? await this.getObjects(ids, options) : [];
 
+        // If the radish is an empty array then the array of objects will throw an error
         // getObjects can return an object instead of an array if the length of the array with ID equal to 1
+        let results;
+        if (ids.length) {
+          results = await this.getObjects(ids, options);
+          results = ids.length === 1 ? [results] : results.results;
+        } else results = [];
         return {
-          results: Array.isArray(results) ? results : [results],
-          count: results.length,
+          results,
+          count: countEdges,
         }
       }
 
