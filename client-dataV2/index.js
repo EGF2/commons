@@ -15,7 +15,13 @@ function newClient(url, mode, tracer) {
   _url = url;
   const client = restify.createJsonClient({
     url,
-    version: "*"
+    version: "*",
+    connectTimeout: 60 * 1000,
+    retry: {
+      retries: 5,
+      minTimeout: 1000,
+      maxtimeout: 10 * 1000
+    }
   });
   // connect to redis
   const options = mode.redis.split(":");
