@@ -1,6 +1,6 @@
 "use strict";
 
-const elasticsearch = require("elasticsearch");
+const elasticsearch = require("@elastic/elasticsearch");
 
 /* eslint camelcase: 0 */
 
