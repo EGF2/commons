@@ -159,7 +159,6 @@ class Searcher {
             span.log({event: "start es", opt: { index: options.object, body: request }});
             return this.elastic.search({
                 index: options.object,
-                type,
                 body: request
             });
         }).then(response => {
