@@ -1,5 +1,3 @@
-
-
 const elasticsearch = require("elasticsearch");
 
 /* eslint camelcase: 0 */
