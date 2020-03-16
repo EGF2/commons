@@ -173,7 +173,6 @@ class Searcher {
             const aliases = ["roles", "zip_code"];
             const type = aliases.includes(options.object) ? null : options.object;
             span.log({ event: "start es", opt: { index: options.object, body: request } });
-            console.log("=>>>>>>>>>>>>>>>", JSON.stringify(request));
             return this.elastic.search({
                 index: options.object,
                 type,
