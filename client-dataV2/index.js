@@ -454,7 +454,7 @@ function newClient(url, mode, tracer) {
         }
       }
       const result = await handle(options, "GET", url)
-      options && options.expand ? this.expand(result, options.expand) : result
+      return options && options.expand ? this.expand(result, options.expand) : result
     },
 
     /**
