@@ -1,5 +1,3 @@
-"use strict";
-
 const elasticsearch = require("elasticsearch");
 
 /* eslint camelcase: 0 */
@@ -8,6 +6,7 @@ class Searcher {
     constructor(config) {
         this.elastic = new elasticsearch.Client(config);
     }
+
     parseFilter(filters, rec) {
         if (!(Object.keys(filters)).includes("AND") && !(Object.keys(filters)).includes("OR") && !rec) {
             return this.parseFiltersFromService(filters);
@@ -22,29 +21,32 @@ class Searcher {
             const objectKeys = Object.keys(item);
             objectKeys.forEach(key => {
                 if (["AND", "OR"].includes(key)) res.bool[operator].push(this.parseFilter(item, true));
-                else {
-                    if (item[key] === "!") res.bool[operator].push({ bool: { must_not: { exists: { field: key } } } })
-                    else if (item[key][0] === "!") res.bool[operator].push({ bool: { must_not: { term: { [key]: item[key].slice(1) } } } })
-                    else if (item[key].toLowerCase() === "exists") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
-                    else if (item[key] === "") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
-                    else res.bool[operator].push({ term: { [key]: item[key] } })
-                }
+                else if (item[key] === "!") res.bool[operator].push({ bool: { must_not: { exists: { field: key } } } })
+                else if (item[key][0] === "!") res.bool[operator].push({ bool: { must_not: { term: { [key]: item[key].slice(1) } } } })
+                else if (item[key].toLowerCase() === "exists") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
+                else if (item[key] === "") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
+                else res.bool[operator].push({ term: { [key]: item[key] } })
 
             })
         })
         return res;
     }
+
     parseFiltersFromService(filters) {
         const res = { bool: { must: [] } };
         for (const field of Object.keys(filters)) {
-            if (filters[field] === "!") res.bool.must.push({ bool: { must_not: { exists: { field: field } } } });
-            else if (filters[field] === "") res.bool.must.push({ exists: { field: field } });
+            if (filters[field] === "!") res.bool.must.push({ bool: { must_not: { exists: { field } } } });
+            else if (filters[field] === "") res.bool.must.push({ exists: { field } });
             else res.bool.must.push({ term: { [field]: filters[field] } });
         }
         return res;
     }
+
     createRequest(options) {
         let filters = [];
+
+        let sort_by_val;
+        let sort_by_field;
         if (options.sort_by) {
             sort_by_val = options.sort_by.split("(")[1].split(")")[0];
             sort_by_field = options.sort_by.split("(")[0];
@@ -54,7 +56,7 @@ class Searcher {
             filters = this.parseFilter(options.filters);
         }
 
-        let range = {};
+        const range = {};
         Object.keys(options.range || {}).forEach(key => {
             range[key] = {};
             if (options.range[key].gte) {
@@ -66,9 +68,9 @@ class Searcher {
         });
         const filterRange = [];
         if (Object.keys(range).length) {
-            filterRange.push({ range: range });
+            filterRange.push({ range });
         }
-        let query = { query: {} };
+        const query = { query: {} };
 
         if (options.fields && options.q) {
             query.query.bool = query.query.bool || {};
@@ -86,7 +88,8 @@ class Searcher {
                 query.query.bool.must = {
                     query_string: {
                         query: `*${options.q}*`,
-                        fields: options.fields
+                        fields: options.fields,
+                        analyzer: "main_analyzer",
                     }
                 };
             }
@@ -105,7 +108,7 @@ class Searcher {
         query.sort = [];
         if (options.sort) {
             options.sort.forEach(sort => {
-                let sortField = sort.split("(")[0];
+                const sortField = sort.split("(")[0];
                 query.sort.push({ [sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc" });
             });
         }
@@ -137,13 +140,13 @@ class Searcher {
 
     search(options, rootSpan, tracer) {
         let span = {
-            log: () => {},
-            finish: () => {}
+            log: () => { },
+            finish: () => { }
         };
         if (rootSpan && tracer) span = tracer.startSpan("es", { childOf: rootSpan, tags: { function: "search" } });
-        let query = Promise.resolve();
+        const query = Promise.resolve();
         return query.then(searchAfter => {
-            let request = this.createRequest(options);
+            const request = this.createRequest(options);
             // Fix default sort by id for npi search
             if (options.object === "log_line") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
@@ -165,16 +168,16 @@ class Searcher {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
             }
 
-            const aliases = ["roles",  "zip_code"];
+            const aliases = ["roles", "zip_code"];
             const type = aliases.includes(options.object) ? null : options.object;
-            span.log({event: "start es", opt: { index: options.object, body: request }});
+            span.log({ event: "start es", opt: { index: options.object, body: request } });
             return this.elastic.search({
                 index: options.object,
                 type,
                 body: request
             });
         }).then(body => {
-            span.log({event: "end es"});
+            span.log({ event: "end es" });
             // Fix for npi search
             const returnObject = [
                 "npi_location",
@@ -183,7 +186,7 @@ class Searcher {
                 "waystar_payer",
                 "zip_code"];
             if (returnObject.includes(options.object)) {
-                let res = {
+                const res = {
                     results: body.hits.hits.map(doc => doc._source),
                     count: body.hits.total
 
@@ -192,7 +195,7 @@ class Searcher {
                 return res;
             }
             // Regular search
-            let res = {
+            const res = {
                 results: body.hits.hits.map(doc => doc._id),
                 count: body.hits.total
             };
@@ -204,9 +207,7 @@ class Searcher {
             return res;
         });
     }
-    index(params) {
-        return this.elastic.index(params);
-    }
+
     index(params) {
         return this.elastic.index(params);
     }
