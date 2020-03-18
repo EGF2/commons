@@ -417,7 +417,7 @@ function newClient(url, mode, tracer) {
       if (response) {
         const edges = JSON.parse(response)
         const countEdges = edges.length;
-        const after = options.after || 0;
+        const after = options ? options.after : 0;
 
         // Get pagination constants from graph config
         const { pagination } = await this.getGraphConfig()
