@@ -411,13 +411,13 @@ function newClient(url, mode, tracer) {
      * @param {Object} options options, for example: { expand: "field, ..." }
      * @return {Object} with fields results and count
      */
-    async getEdges(src, name, options) {
+    async getEdges(src, name, options = {}) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
         const edges = JSON.parse(response)
         const countEdges = edges.length;
-        const after = options ? options.after : 0;
+        const after = options.after || 0;
 
         // Get pagination constants from graph config
         const { pagination } = await this.getGraphConfig()
