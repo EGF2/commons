@@ -38,7 +38,10 @@ const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
 const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
         consumer.subscribe([config.kafka.topic]);
-        Log.info("Consumer subscribed on topic", { topic: config.kafka.topic, client: consumer.name });
+        Log.info("Consumer subscribed on topic", { 
+            ...consumer.globalConfig,
+            offsetStrategy: config.kafka.offsetStrategy || "earliest",
+        });
 
         while (true) {
             // get new message
