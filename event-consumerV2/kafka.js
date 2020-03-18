@@ -7,6 +7,32 @@ const Log = new Logging(__filename);
 
 let currentPartitions = [];
 
+const firstRebalance = new Promise(() => {});
+
+const timeout = async ms => new Promise(res => setTimeout(res, ms));
+
+const missingAllMessages = async (consumer, config) => {
+    let assignments = await consumer.assignments();
+    if (!assignments.length) Log.info("Wait finish rebalance");
+    while (!assignments.length) {
+        await timeout(1000);
+        assignments = await consumer.assignments();
+        console.log(assignments)
+    }
+    Log.info("Get assignments", { assignments })
+    for (const { partition } of assignments) {
+        const high = await new Promise((resolve, reject) => {
+            consumer.queryWatermarkOffsets(config.kafka.topic, partition, 3000, (err, offsets) => {
+                if (err) reject(err);
+                resolve(offsets.highOffset);
+            });
+        });
+        Log.info("Skipped messages for partition", { partition, offset: high });
+        await consumer.commitMessage({ topic: config.kafka.topic, partition, offset: high })
+    }
+    Log.info("Skip messages for all partitions", { assignments })
+}
+
 const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
     let assignments = consumer.assignments();
     consumer.committed([...currentPartitions, ...assignments], 3000, (e, data) => {
@@ -38,9 +64,14 @@ const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
 const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
         consumer.subscribe([config.kafka.topic]);
-        Log.info("Consumer subscribed on topic", { topic: config.kafka.topic, client: consumer.name });
+        Log.info("Consumer subscribed on topic", { ...consumer.globalConfig, offsetStrategy: config.kafka.offsetStrategy || "earliest" });
+        await firstRebalance;
+
+        // for missang all messages
+        if (argv.missing) await missingAllMessages(consumer, config)
 
         while (true) {
+
             // get new message
             const data = await new Promise((resolve, reject) => {
                 consumer.consume(1, (err, data) => {
@@ -117,6 +148,7 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
                 currentPartitions = this.assignments();
 
                 Log.info("Offsets info", offsetInfo);
+                firstRebalance.resolve()
             } else if (err.code == Kafka.CODES.ERRORS.ERR__REVOKE_PARTITIONS) {
                 this.unassign();
             } else {
