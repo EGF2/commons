@@ -38,7 +38,7 @@ const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
 const getHandler = (config, eventHandler, errorHandler, consumer) => async () => {
     try {
         consumer.subscribe([config.kafka.topic]);
-        Log.info("Consumer subscribed on topic", { 
+        Log.info("Consumer subscribed on topic", {
             ...consumer.globalConfig,
             offsetStrategy: config.kafka.offsetStrategy || "earliest",
         });
@@ -60,7 +60,7 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                 const event = { kafkaInfo: message, ...JSON.parse(value.toString()) }
 
                 // service should be down if it gets an old message from Kafka. Default delta = 1 day
-                if (new Date() - new Date(message.timestamp) > (config.kafka.maxDeltaTimestamp || 1 * 24 * 60 * 60 * 1000)) {
+                if (new Date() - new Date(message.timestamp) > (config.kafka.maxDeltaTimestamp || 4 * 24 * 60 * 60 * 1000)) {
                     const e = new Error(`Consumer get old message for ${message.timestamp}`);
                     Log.error(`Consumer get old message`, e, { message });
                     throw e;
