@@ -411,7 +411,7 @@ function newClient(url, mode, tracer) {
      * @param {Object} options options, for example: { expand: "field, ..." }
      * @return {Object} with fields results and count
      */
-    async getEdges(src, name, options) {
+    async getEdges(src, name, options = {}) {
       // from redis
       const response = await redisGet(`${src}-${name}`);
       if (response) {
