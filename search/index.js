@@ -113,7 +113,7 @@ class Searcher {
         } else {
             query.query.bool = filters.bool;
         }
-        if (filterRange) {
+        if (filterRange.length) {
             if (!query.query.bool) query.query.bool = {};
             query.query.bool.filter = filterRange;
         }
