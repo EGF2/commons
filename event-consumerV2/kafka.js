@@ -2,6 +2,8 @@ const Kafka = require('node-rdkafka');
 const uuid = require("uuid").v4;
 const { argv } = require('yargs');
 const Logging = require("../Logging");
+const config = require("../config");
+const monitoring = require("../monitoring");
 
 const Log = new Logging(__filename);
 
@@ -28,6 +30,35 @@ const getOffsetsInfo = consumer => new Promise((resolve, reject) => {
         resolve(result);
     })
 });
+
+// Producer
+const producer = new Kafka.HighLevelProducer({
+    "metadata.broker.list": config.kafka.hosts,
+    "api.version.request.timeout.ms": 1000,
+});
+const connectProducer = new Promise(resolve => producer.on("ready", resolve));
+producer.connect();
+
+const sendErrorMessage = (message, topic, error) =>
+      new Promise(async (resolve, reject) => {
+          try {
+              // you need to wait for the producer to connect to Kafka
+              await connectProducer;
+              // send message
+              await producer.produce(topic, null, Buffer.from(JSON.stringify(message)), null, Date.now(), (err, offset) => {
+                  if (err) reject(err);
+                  Log.debug("Send message to kafka", {
+                      topic,
+                      offset,
+                      message,
+                  });
+                  resolve(offset);
+              });
+
+          } catch (e) {
+              reject(e);
+          }
+      });
 
 /**
  * @param config - kafka config
@@ -62,10 +93,13 @@ const getHandler = (config, eventHandler, errorHandler, consumer) => async () =>
                     Log.error(`Consumer get old message`, e, { message });
                     throw e;
                 }
-
-                // processing
-                await eventHandler(event);
-
+                try {
+                    // processing
+                    await eventHandler(event);
+                } catch (e) {
+                    // send message in the error queue
+                    await sendErrorMessage(message, config.kafka.errorTopic, e);
+                }
                 consumer.commitMessage(message);
             }
         }
