@@ -9,11 +9,11 @@ class Producer {
   }
 
   createProducer() {
-    const producer = new Kafka.HighLevelProducer({
+    this.producer = new Kafka.HighLevelProducer({
       "metadata.broker.list": this.config.hosts,
       "api.version.request.timeout.ms": 1000
     });
-    producer.connect();
+    this.producer.connect();
   }
 
   _sendMessage(message, partition) {
@@ -22,8 +22,8 @@ class Producer {
 
     return new Promise((resolve, reject) => {
       try {
-        producer.produce(
-          config.topic,
+        this.producer.produce(
+          this.config.topic,
           partition,
           Buffer.from(message),
           null,
@@ -31,7 +31,7 @@ class Producer {
           (err, offset) => {
             if (err) reject(err);
             Log.info("Send message to kafka", {
-              topic: config.topic,
+              topic: this.config.topic,
               partition,
               offset,
               message
@@ -47,10 +47,10 @@ class Producer {
   async sendEvent(event) {
     let action = "Send event to Kafka";
     try {
-      await sendMessage(JSON.stringify(event), 0);
+      await this._sendMessage(JSON.stringify(event), 0);
     } catch (e) {
       console.log("ERROR SEND TO system_error queue");
-      Log.error(`${action} failed.`, e, { event });
+      console.log(`${action} failed.`, e, { event });
       process.exit(1);
     }
   }

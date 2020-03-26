@@ -85,13 +85,10 @@ const getHandler = (
         try {
           await eventHandler(event);
         } catch (e) {
-          const res = Produser.sendMessage(
-            {
-              event,
-              message: { e: e.message, stack: e.stack }
-            },
-            0
-          );
+          const res = Produser.sendEvent({
+            event,
+            message: { e: e.message, stack: e.stack }
+          });
           if (!res) console.log("ERROR SEND TO ERROR QUEUE", event);
           throw e;
         }
