@@ -2,7 +2,10 @@ const Kafka = require("node-rdkafka");
 const uuid = require("uuid").v4;
 const { argv } = require("yargs");
 const Logging = require("../Logging");
-const produser = require("../produser");
+const ProduserClient = require("../produser");
+const { MonitoringClient } = require("../monitoring");
+
+let Monitoring;
 const Log = new Logging(__filename);
 
 let currentPartitions = [];
@@ -90,6 +93,7 @@ const getHandler = (
             message: { e: e.message, stack: e.stack }
           });
           if (!res) console.log("ERROR SEND TO ERROR QUEUE", event);
+          Monitoring.sendFailEvent(event.id);
           throw e;
         }
 
@@ -102,8 +106,10 @@ const getHandler = (
 };
 
 const newConsumer = async (config, eventHandler, errorHandler) => {
-  const Produser = new produser(config);
+  const Produser = new ProduserClient(config);
   Produser.createProducer();
+
+  Monitoring = new MonitoringClient(config);
 
   // for debug
   let debugPartitions = null;

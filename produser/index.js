@@ -1,6 +1,6 @@
 const Kafka = require("node-rdkafka");
 
-class Producer {
+class ProduserClient {
   constructor(config) {
     this.config = {
       hosts: config.kafka.hosts,
@@ -56,4 +56,4 @@ class Producer {
   }
 }
 
-module.exports = Producer;
+module.exports = ProduserClient;
