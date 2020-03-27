@@ -1,6 +1,6 @@
 "use strict";
 
-const elasticsearch = require("elasticsearch");
+const elasticsearch = require("@elastic/elasticsearch");
 
 /* eslint camelcase: 0 */
 
@@ -12,7 +12,6 @@ class Searcher {
         if (!(Object.keys(filters)).includes("AND") && !(Object.keys(filters)).includes("OR") && !rec) {
             return this.parseFiltersFromService(filters);
         }
-
         const operatorLogic = (Object.keys(filters))[0];
         let operator;
         if (operatorLogic === "AND") operator = "must";
@@ -29,7 +28,6 @@ class Searcher {
                     else if (item[key] === "") res.bool[operator].push({ bool: { must: { exists: { field: key } } } })
                     else res.bool[operator].push({ term: { [key]: item[key] } })
                 }
-
             })
         })
         return res;
@@ -49,11 +47,9 @@ class Searcher {
             sort_by_val = options.sort_by.split("(")[1].split(")")[0];
             sort_by_field = options.sort_by.split("(")[0];
         }
-
         if (options.filters) {
             filters = this.parseFilter(options.filters);
         }
-
         let range = {};
         Object.keys(options.range || {}).forEach(key => {
             range[key] = {};
@@ -69,7 +65,6 @@ class Searcher {
             filterRange.push({ range: range });
         }
         let query = { query: {} };
-
         if (options.fields && options.q) {
             query.query.bool = query.query.bool || {};
             options.q = options.q.replace("AND", "and");
@@ -91,16 +86,13 @@ class Searcher {
                 };
             }
         }
-
         if (options.count) {
             query.size = options.count;
         }
-
         // Add parameter "from" instead of "search_after"
         if (options.after) {
             query.from = options.after;
         }
-
         // add sorting
         query.sort = [];
         if (options.sort) {
@@ -109,7 +101,7 @@ class Searcher {
                 query.sort.push({ [sortField]: sort.toUpperCase().endsWith("(DESC)") ? "desc" : "asc" });
             });
         }
-        if (!options.notAddSort) query.sort.push({ id: "asc" });
+        // if (!options.notAddSort) query.sort.push({ id: "asc" });
         if (query.query.bool && query.query.bool.must) {
             if (!Array.isArray(filters) && filters.bool.must) {
                 filters.bool.must.push(query.query.bool.must);
@@ -125,7 +117,6 @@ class Searcher {
         else {
             query.query.bool = { filter: [] };
         }
-
         if (query.query.bool && query.query.bool.must) {
             query.query.bool.must = query.query.bool.must.filter(item => {
                 if (!Object.keys(item).length) return false;
@@ -134,7 +125,6 @@ class Searcher {
         }
         return query;
     }
-
     search(options, rootSpan, tracer) {
         let span = {
             log: () => {},
@@ -164,16 +154,14 @@ class Searcher {
             if (options.object === "zip_code") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
             }
-
             const aliases = ["roles",  "zip_code"];
             const type = aliases.includes(options.object) ? null : options.object;
             span.log({event: "start es", opt: { index: options.object, body: request }});
             return this.elastic.search({
                 index: options.object,
-                type,
                 body: request
             });
-        }).then(body => {
+        }).then(response => {
             span.log({event: "end es"});
             // Fix for npi search
             const returnObject = [
@@ -184,21 +172,20 @@ class Searcher {
                 "zip_code"];
             if (returnObject.includes(options.object)) {
                 let res = {
-                    results: body.hits.hits.map(doc => doc._source),
-                    count: body.hits.total
-
+                    results: response.body.hits.hits.map(doc => doc._source),
+                    count: response.body.hits.total.value
                 };
                 span.finish();
                 return res;
             }
             // Regular search
             let res = {
-                results: body.hits.hits.map(doc => doc._id),
-                count: body.hits.total
+                results: response.body.hits.hits.map(doc => doc._id),
+                count: response.body.hits.total.value
             };
-            if (body.hits.hits.length > 0) {
-                res.first = body.hits.hits[0]._source.id;
-                res.last = body.hits.hits.slice(-1)[0]._source.id;
+            if (response.body.hits.hits.length > 0) {
+                res.first = response.body.hits.hits[0]._source.id;
+                res.last = response.body.hits.hits.slice(-1)[0]._source.id;
             }
             span.finish();
             return res;
@@ -211,5 +198,4 @@ class Searcher {
         return this.elastic.index(params);
     }
 }
-
 module.exports.Searcher = Searcher;
