@@ -57,10 +57,10 @@ class MonitoringClient {
   async sendFailEvent(eventId) {
     await axios({
       method: "POST",
-      url: `${this._url}/v2/internal/monitoring/event_fail`,
+      url: `${this._url}/v2/internal/monitoring/send_error`,
       data: {
-        service_name: this._serviceName,
-        event_id: eventId
+        service: this._serviceName,
+        event: eventId
       }
     });
   }

@@ -89,8 +89,12 @@ const getHandler = (
           await eventHandler(event);
         } catch (e) {
           const res = Produser.sendEvent({
-            event,
-            message: { e: e.message, stack: e.stack }
+            kafkaInfo: message,
+            event: { ...JSON.parse(value.toString()) },
+            meta: {
+              error: { e: e.message, stack: e.stack },
+              service_name: config.serviceName
+            }
           });
           if (!res) console.log("ERROR SEND TO ERROR QUEUE", event);
           Monitoring.sendFailEvent(event.id);
