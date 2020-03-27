@@ -96,7 +96,7 @@ const getHandler = (
               service_name: config.serviceName
             }
           });
-          if (!res) console.log("ERROR SEND TO ERROR QUEUE", event);
+          if (res === null) console.log("ERROR SEND TO ERROR QUEUE", event);
           await Monitoring.sendFailEvent(event.id);
         }
 
