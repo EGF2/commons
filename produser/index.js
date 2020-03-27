@@ -30,7 +30,7 @@ class ProduserClient {
           Date.now(),
           (err, offset) => {
             if (err) reject(err);
-            Log.info("Send message to kafka", {
+            console.log("Send message to kafka", {
               topic: this.config.topic,
               partition,
               offset,
