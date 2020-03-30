@@ -1,7 +1,8 @@
 const { argv } = require('yargs');
-const fs = require('fs');
-const readline = require('readline');
 const csv = require("csvtojson");
+const lineByLine = require('n-readlines');
+const liner = new lineByLine(argv.file);
+
 const getFileContent = async (first, line) => {
   let result = {};
   try {
@@ -19,24 +20,19 @@ const getFileContent = async (first, line) => {
 
 const newConsumer = async (config, eventHandler, errorHandler) => {
   try {
-    let firstString = null;
-    const read = readline.createInterface({
-      input: fs.createReadStream(argv.file),
-      output: process.stdout,
-      console: false
-    });
-    read.on('line', async line => {
-      if (line) {
-        if (!firstString) {
-          firstString = line;
-          return;
-        }
-        const result = await getFileContent(firstString, line);
-        await eventHandler(result[0].event);
-      } else {
-        console.log("END")
+    let line = liner.next();
+    let firstString;
+    let lineNumber = 0;
+    while (line) {
+      if (lineNumber === 0) {
+        firstString = line;
+        line = liner.next();
       }
-    });
+      const result = await getFileContent(firstString, line);
+      await eventHandler(result[0].event);
+      lineNumber++;
+      line = liner.next();
+    }
   } catch (e) {
     errorHandler(e);
   }
