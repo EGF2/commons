@@ -7,7 +7,7 @@ class MonitoringClient {
     this._serviceName = config.serviceName;
   }
 
-  _getIPAddress = () => {
+  _getIPAddress() {
     const interfaces = require("os").networkInterfaces();
     for (const devName in interfaces) {
       const iface = interfaces[devName];
@@ -23,7 +23,7 @@ class MonitoringClient {
       }
     }
     return "0.0.0.0";
-  };
+  }
 
   async _getSalt() {
     const result = await axios.get(
