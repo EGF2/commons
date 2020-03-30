@@ -385,8 +385,7 @@ function newClient(url, mode, tracer) {
           // getObjects can return an object instead of an array if the length of the array with ID equal to 1
           let results;
           if (ids.length) {
-            results = await this.getObjects(ids, options);
-            results = ids.length === 1 ? [results] : results.results;
+            results = await Promise.all(ids.map(id => this.getObject(id, options)))
           } else results = [];
 
           return results;
@@ -430,8 +429,7 @@ function newClient(url, mode, tracer) {
         // getObjects can return an object instead of an array if the length of the array with ID equal to 1
         let results;
         if (ids.length) {
-          results = await this.getObjects(ids, options);
-          results = ids.length === 1 ? [results] : results.results;
+          results = await Promise.all(ids.map(id => this.getObject(id, options)))
         } else results = [];
         return {
           results,

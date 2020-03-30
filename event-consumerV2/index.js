@@ -13,6 +13,7 @@ function newConsumer(config, eventHandler, errorHandler) {
         case "kafka": return require("./kafka")(config, eventHandler, errorHandler);
         case "rethinkdb": return require("./rethinkdb")(config, eventHandler, errorHandler);
         case "kinesis": return require("./kinesis")(config, eventHandler, errorHandler);
+        case "errorFile": return require("./errorFile")(config, eventHandler, errorHandler);
         default: throw new Error("Unknown consumer type");
     }
 }
