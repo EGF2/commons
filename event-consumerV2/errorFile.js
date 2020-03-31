@@ -29,7 +29,8 @@ const newConsumer = async (config, eventHandler, errorHandler) => {
         line = liner.next();
       }
       const result = await getFileContent(firstString, line);
-      await eventHandler(result[0].event);
+      const event = JSON.parse(result[0].event);
+      await eventHandler(event);
       lineNumber++;
       line = liner.next();
     }
