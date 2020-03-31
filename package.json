@@ -6,6 +6,7 @@
     "@sentry/node": "^5.6.2",
     "aws-sdk": "^2.610.0",
     "axios": "^0.19.0",
+    "csvtojson": "^2.0.10",
     "elasticsearch": "^12.0.1",
     "i": "^0.3.6",
     "lodash": "^4.17.15",
