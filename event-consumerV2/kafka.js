@@ -76,7 +76,7 @@ const getHandler = (
         // service should be down if it gets an old message from Kafka. Default delta = 1 day
         if (
           new Date() - new Date(message.timestamp) >
-          (config.kafka.maxDeltaTimestamp || 1 * 24 * 60 * 60 * 1000)
+          (config.kafka.maxDeltaTimestamp || 6 * 24 * 60 * 60 * 1000)
         ) {
           const e = new Error(
             `Consumer get old message for ${message.timestamp}`
