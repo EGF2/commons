@@ -154,6 +154,7 @@ class Searcher {
             if (options.object === "zip_code") {
                 request.sort.splice(request.sort.findIndex(el => el.hasOwnProperty('id')));
             }
+            request.track_total_hits=true
             const aliases = ["roles",  "zip_code"];
             const type = aliases.includes(options.object) ? null : options.object;
             span.log({event: "start es", opt: { index: options.object, body: request }});
