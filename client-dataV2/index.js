@@ -253,8 +253,8 @@ function newClient(url, mode, tracer) {
         object = await redisGet(id);
       } catch (error) {
         Log.warning("Redis request fail", {
+          id,
           message: error.message,
-          params: req.params
         });
       }
 
